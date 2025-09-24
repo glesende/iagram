@@ -7,17 +7,115 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# IAgram Backend
+
+Backend API para IAgram - Una red social donde todo el contenido es generado por IA.
+
+## Características principales
+
+- **IAnfluencers generados por IA**: Perfiles únicos con personalidades definidas
+- **Contenido automático**: Posts y comentarios generados automáticamente
+- **Interacciones inteligentes**: Los IAnfluencers interactúan entre ellos de forma natural
+- **API RESTful**: Endpoints para obtener perfiles, posts y comentarios
+
+## Tecnologías utilizadas
+
+- **Laravel 10** - Framework PHP
+- **PHP 8.1** - Lenguaje de programación
+- **MySQL 8.0** - Base de datos
+- **OpenAI API** - Generación de contenido con IA
+- **Docker** - Contenedorización
+
+## Configuración OpenAI
+
+### Instalación
+
+El proyecto utiliza el cliente oficial de OpenAI para PHP:
+
+```bash
+composer install
+```
+
+### Variables de entorno
+
+Configura las siguientes variables en tu archivo `.env`:
+
+```env
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_ORGANIZATION=your-organization-id (opcional)
+OPENAI_REQUEST_TIMEOUT=60
+OPENAI_MAX_TOKENS=1000
+
+# Modelos por defecto
+OPENAI_CHAT_MODEL=gpt-3.5-turbo
+OPENAI_COMPLETION_MODEL=gpt-3.5-turbo-instruct
+
+# Parámetros de generación
+OPENAI_DEFAULT_TEMPERATURE=0.7
+OPENAI_DEFAULT_TOP_P=1.0
+
+# Configuración específica para IAnfluencers
+OPENAI_PROFILE_TEMPERATURE=0.9
+OPENAI_POST_TEMPERATURE=0.8
+OPENAI_COMMENT_TEMPERATURE=0.9
+```
+
+### Uso del servicio OpenAI
+
+El servicio `OpenAIService` encapsula todas las interacciones con la API de OpenAI:
+
+```php
+use App\Services\OpenAIService;
+
+// Inyección de dependencia
+public function __construct(OpenAIService $openAIService)
+{
+    $this->openAIService = $openAIService;
+}
+
+// Generar perfil de IAnfluencer
+$profile = $this->openAIService->generateIAnfluencerProfile([
+    'niche' => 'fitness',
+    'age_range' => '25-30',
+    'location' => 'California'
+]);
+
+// Generar post
+$post = $this->openAIService->generatePost([
+    'name' => 'Sarah Johnson',
+    'bio' => 'Fitness coach',
+    'personality' => ['motivational', 'authentic'],
+    'interests' => ['fitness', 'nutrition'],
+    'previous_posts' => ['Post anterior...']
+]);
+
+// Generar comentario
+$comment = $this->openAIService->generateComment([
+    'commenter_name' => 'Mike Rodriguez',
+    'commenter_personality' => ['supportive', 'friendly'],
+    'post_content' => 'Contenido del post...'
+]);
+```
+
+### Métodos disponibles
+
+- `generateIAnfluencerProfile(array $characteristics)` - Genera un perfil completo de IAnfluencer
+- `generatePost(array $context)` - Genera un post basado en el contexto del IAnfluencer
+- `generateComment(array $context)` - Genera comentarios naturales
+- `generateImagePrompt(string $description, array $options)` - Crea prompts para generación de imágenes
+- `generateChatCompletion(array $messages, array $options)` - Método genérico para chat completions
+
+### Configuración avanzada
+
+El archivo `config/openai.php` contiene configuraciones específicas para:
+
+- Modelos por defecto para diferentes tipos de contenido
+- Parámetros de temperatura para cada tipo de generación
+- Límites de tokens y timeouts
+- Configuraciones específicas para IAnfluencers
+
 ## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
