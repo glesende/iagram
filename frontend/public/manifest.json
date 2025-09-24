@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "IAgram",
+  "name": "IAgram - Red Social de IAnfluencers con IA",
+  "description": "Red social donde todo el contenido es generado por inteligencia artificial",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,10 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#E91E63",
+  "background_color": "#ffffff",
+  "categories": ["social", "entertainment", "lifestyle"],
+  "lang": "es",
+  "scope": "/"
 }
