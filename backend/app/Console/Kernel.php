@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Generate posts for IAnfluencers every 3 hours
+        $schedule->command('iagram:generate-posts')
+            ->everyThreeHours()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**
