@@ -1,7 +1,7 @@
 # IAgram - Makefile para comandos de desarrollo
 # Este archivo simplifica los comandos Docker más utilizados
 
-.PHONY: help up down build logs restart backend-shell frontend-shell db-shell migrate seed fresh
+.PHONY: help up down build logs restart backend-shell frontend-shell db-shell migrate seed fresh cron-status cron-logs
 
 # Comando por defecto - mostrar ayuda
 help:
@@ -23,6 +23,10 @@ help:
 	@echo "  make migrate         - Ejecutar migraciones de base de datos"
 	@echo "  make seed            - Ejecutar seeders"
 	@echo "  make fresh           - Refrescar base de datos (migrate:fresh + seed)"
+	@echo ""
+	@echo "Comandos de cron jobs:"
+	@echo "  make cron-status     - Verificar el estado del cron y supervisord"
+	@echo "  make cron-logs       - Ver logs del cron y Laravel scheduler"
 	@echo ""
 
 # Comandos principales Docker
@@ -71,3 +75,19 @@ seed:
 fresh:
 	@echo "🗃️  Refrescando base de datos (migrate:fresh + seed)..."
 	docker-compose exec backend php artisan migrate:fresh --seed
+
+# Comandos de cron jobs
+cron-status:
+	@echo "🕒 Verificando estado del cron y supervisord..."
+	docker-compose exec backend supervisorctl status
+	@echo ""
+	@echo "📋 Verificando crontab de www-data:"
+	docker-compose exec backend crontab -u www-data -l
+
+cron-logs:
+	@echo "📋 Mostrando logs del cron y Laravel scheduler..."
+	@echo "--- Logs de cron ---"
+	docker-compose exec backend tail -n 20 /var/log/cron.log
+	@echo ""
+	@echo "--- Logs de errores de cron ---"
+	docker-compose exec backend tail -n 10 /var/log/cron_error.log
