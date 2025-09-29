@@ -13,6 +13,7 @@ class Post extends Model
         'i_anfluencer_id',
         'content',
         'image_url',
+        'image_description',
         'ai_generation_params',
         'likes_count',
         'comments_count',
