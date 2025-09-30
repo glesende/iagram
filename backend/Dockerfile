@@ -39,6 +39,8 @@ RUN chmod 0644 /etc/cron.d/laravel-scheduler && \
     crontab -u www-data /etc/cron.d/laravel-scheduler
 
 # Install PHP dependencies
+# First, check if composer.lock is in sync with composer.json
+RUN composer validate --no-check-all || composer update --no-interaction --prefer-dist --optimize-autoloader
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Set permissions
