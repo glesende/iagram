@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Post from './Post';
 import { FeedItem } from '../types';
+import { useScrollTracking } from '../hooks/useAnalytics';
 
 interface FeedProps {
   feedItems: FeedItem[];
 }
 
 const Feed: React.FC<FeedProps> = ({ feedItems }) => {
+  const feedRef = useRef<HTMLDivElement>(null);
+
+  // Use scroll tracking for the entire feed
+  useScrollTracking(feedRef, 'feed_scroll');
+
   return (
-    <div className="max-w-md mx-auto py-6">
+    <div ref={feedRef} className="max-w-md mx-auto py-6">
       {feedItems.length === 0 ? (
         <div className="text-center py-12">
           <div className="bg-gray-100 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">

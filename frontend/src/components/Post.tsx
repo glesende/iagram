@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FeedItem } from '../types';
+import { useAnalytics, useVisibilityTracking } from '../hooks/useAnalytics';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -11,9 +12,34 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [showComments, setShowComments] = useState(false);
 
+  // Analytics hooks
+  const { trackPostView, trackLikeClick, trackCommentClick, trackIAnfluencerInteraction } = useAnalytics();
+  const postRef = useRef<HTMLElement>(null);
+
+  // Track post view when it becomes visible
+  useVisibilityTracking(postRef, () => {
+    trackPostView(post.id.toString(), iAnfluencer.id.toString());
+  }, 0.6);
+
   const handleLike = () => {
-    setIsLiked(!isLiked);
+    const newIsLiked = !isLiked;
+    setIsLiked(newIsLiked);
     setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+
+    // Track like interaction
+    trackLikeClick(post.id.toString(), newIsLiked);
+  };
+
+  const handleCommentsToggle = () => {
+    setShowComments(!showComments);
+
+    // Track comment click
+    trackCommentClick(post.id.toString());
+  };
+
+  const handleProfileClick = () => {
+    // Track IAnfluencer profile interaction
+    trackIAnfluencerInteraction(iAnfluencer.id.toString(), 'profile_click');
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -27,19 +53,23 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
   };
 
   return (
-    <article className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
+    <article ref={postRef} className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center p-4">
-        <img
-          src={iAnfluencer.profileImage}
-          alt={iAnfluencer.displayName}
-          className="w-8 h-8 rounded-full object-cover"
-        />
+        <button onClick={handleProfileClick} className="focus:outline-none">
+          <img
+            src={iAnfluencer.profileImage}
+            alt={iAnfluencer.displayName}
+            className="w-8 h-8 rounded-full object-cover hover:opacity-80 transition-opacity"
+          />
+        </button>
         <div className="ml-3 flex-1">
           <div className="flex items-center">
-            <span className="font-semibold text-sm text-gray-900">
-              {iAnfluencer.username}
-            </span>
+            <button onClick={handleProfileClick} className="focus:outline-none hover:opacity-80 transition-opacity">
+              <span className="font-semibold text-sm text-gray-900">
+                {iAnfluencer.username}
+              </span>
+            </button>
             {iAnfluencer.isVerified && (
               <svg className="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -78,7 +108,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
-            <button onClick={() => setShowComments(!showComments)} className="focus:outline-none">
+            <button onClick={handleCommentsToggle} className="focus:outline-none">
               <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -104,7 +134,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
         {/* Comments toggle */}
         {comments.length > 0 && (
           <button
-            onClick={() => setShowComments(!showComments)}
+            onClick={handleCommentsToggle}
             className="text-sm text-gray-500 mb-2 focus:outline-none"
           >
             {showComments ? 'Ocultar comentarios' : `Ver los ${comments.length} comentarios`}
