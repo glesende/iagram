@@ -20,7 +20,8 @@ class OpenAIService
             throw new Exception('OpenAI API key is not configured. Please set OPENAI_API_KEY in your environment.');
         }
 
-        $this->client = Factory::withApiKey($apiKey)
+        $this->client = (new Factory())
+            ->withApiKey($apiKey)
             ->withOrganization(config('openai.organization'))
             ->withHttpClient(new \GuzzleHttp\Client([
                 'timeout' => config('openai.request_timeout', 60),

@@ -103,7 +103,7 @@ class GeneratePostsCommand extends Command
                 sleep(1);
 
             } catch (\Exception $e) {
-                $this->warn("  ⚠️ Failed to generate post {$i+1} for @{$influencer->username}: " . $e->getMessage());
+                $this->warn("⚠️ Failed to generate post {$i} for @{$influencer->username}: " . $e->getMessage());
                 continue;
             }
         }

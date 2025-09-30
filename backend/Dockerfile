@@ -29,6 +29,8 @@ COPY apache.conf /etc/apache2/sites-available/000-default.conf
 COPY . /var/www/html
 
 # Install PHP dependencies
+# First, check if composer.lock is in sync with composer.json
+RUN composer validate --no-check-all || composer update --no-interaction --prefer-dist --optimize-autoloader
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Set permissions
