@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: iagram
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_USER: iagram
       MYSQL_PASSWORD: iagram123
     ports:
