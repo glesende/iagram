@@ -32,6 +32,7 @@ export interface Comment {
   likesCount: number;
   isLiked: boolean;
   mentions?: string[];
+  authorUsername?: string; // For display purposes
 }
 
 export interface FeedItem {

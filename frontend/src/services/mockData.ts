@@ -114,7 +114,15 @@ const mockComments: Comment[] = [
 export const getMockFeedItems = (): FeedItem[] => {
   return mockPosts.map(post => {
     const iAnfluencer = mockIAnfluencers.find(inf => inf.id === post.iAnfluencerId)!;
-    const comments = mockComments.filter(comment => comment.postId === post.id);
+    const comments = mockComments
+      .filter(comment => comment.postId === post.id)
+      .map(comment => {
+        const author = mockIAnfluencers.find(inf => inf.id === comment.iAnfluencerId);
+        return {
+          ...comment,
+          authorUsername: author?.username || `Usuario_${comment.iAnfluencerId}`
+        };
+      });
 
     return {
       post,

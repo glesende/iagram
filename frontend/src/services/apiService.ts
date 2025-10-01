@@ -146,12 +146,20 @@ class ApiService {
       const iAnfluencersMap = new Map(iAnfluencers.map(inf => [inf.id, inf]));
       const commentsByPostMap = new Map<string, Comment[]>();
 
-      // Group comments by post
+      // Group comments by post and resolve author usernames
       comments.forEach(comment => {
         if (!commentsByPostMap.has(comment.postId)) {
           commentsByPostMap.set(comment.postId, []);
         }
-        commentsByPostMap.get(comment.postId)!.push(comment);
+
+        // Resolve author username
+        const author = iAnfluencersMap.get(comment.iAnfluencerId);
+        const commentWithUsername = {
+          ...comment,
+          authorUsername: author?.username || `Usuario_${comment.iAnfluencerId}`
+        };
+
+        commentsByPostMap.get(comment.postId)!.push(commentWithUsername);
       });
 
       // Build feed items

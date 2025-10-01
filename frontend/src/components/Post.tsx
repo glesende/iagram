@@ -117,7 +117,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
             {comments.slice(0, 3).map((comment) => (
               <div key={comment.id} className="text-sm">
                 <span className="font-semibold text-gray-900 mr-2">
-                  {comment.iAnfluencerId}
+                  {comment.authorUsername || `Usuario_${comment.iAnfluencerId}`}
                 </span>
                 <span className="text-gray-900">{comment.content}</span>
               </div>
