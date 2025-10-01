@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             IAnfluencerSeeder::class,
+            PostSeeder::class,
+            CommentSeeder::class,
         ]);
     }
 }
