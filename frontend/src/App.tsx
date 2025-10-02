@@ -10,33 +10,33 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchFeedData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchFeedData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Try to fetch real data from API
-        const realFeedItems = await apiService.getFeedItems();
+      // Try to fetch real data from API
+      const realFeedItems = await apiService.getFeedItems();
 
-        if (realFeedItems.length > 0) {
-          setFeedItems(realFeedItems);
-          console.log('✅ Using real API data');
-        } else {
-          // Fallback to mock data if no real data available
-          console.log('⚠️ No real data available, using mock data');
-          setFeedItems(getMockFeedItems());
-        }
-      } catch (err) {
-        // Fallback to mock data if API fails
-        console.log('⚠️ API failed, falling back to mock data:', err);
-        setError('API unavailable - showing sample content');
+      if (realFeedItems.length > 0) {
+        setFeedItems(realFeedItems);
+        console.log('✅ Using real API data');
+      } else {
+        // Fallback to mock data if no real data available
+        console.log('⚠️ No real data available, using mock data');
         setFeedItems(getMockFeedItems());
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      // Fallback to mock data if API fails
+      console.log('⚠️ API failed, falling back to mock data:', err);
+      setError('API unavailable - showing sample content');
+      setFeedItems(getMockFeedItems());
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFeedData();
   }, []);
 
@@ -61,7 +61,7 @@ function App() {
           </div>
         </div>
       )}
-      <Feed feedItems={feedItems} />
+      <Feed feedItems={feedItems} onRefresh={fetchFeedData} />
     </Layout>
   );
 }
