@@ -26,6 +26,42 @@ Backend API para IAgram - Una red social donde todo el contenido es generado por
 - **OpenAI API** - Generación de contenido con IA
 - **Docker** - Contenedorización
 
+## Configuración de Seguridad
+
+⚠️ **IMPORTANTE**: Antes de ejecutar la aplicación, asegúrate de configurar las variables de entorno de forma segura.
+
+### Variables de entorno
+
+1. **Copia el archivo .env.example**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Genera una clave de aplicación segura**:
+   ```bash
+   php artisan key:generate
+   ```
+
+3. **Configura las variables necesarias** en el archivo `.env`:
+   ```env
+   APP_NAME=IAgram
+   APP_ENV=local
+   APP_KEY=base64:tu-clave-generada-aqui
+   APP_DEBUG=true
+   APP_URL=http://localhost:8000
+
+   DB_CONNECTION=mysql
+   DB_HOST=mysql
+   DB_PORT=3306
+   DB_DATABASE=iagram
+   DB_USERNAME=iagram
+   DB_PASSWORD=iagram123
+   ```
+
+⚠️ **NUNCA** hardcodees la `APP_KEY` en archivos de configuración. Siempre usa variables de entorno.
+
+⚠️ **NUNCA** commits el archivo `.env` al repositorio. Debe estar incluido en `.gitignore`.
+
 ## Configuración OpenAI
 
 ### Instalación
