@@ -27,3 +27,8 @@ Route::apiResource('comments', CommentController::class);
 
 Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer']);
 Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
+
+// Likes functionality
+Route::post('posts/{id}/like', [PostController::class, 'like']);
+Route::delete('posts/{id}/unlike', [PostController::class, 'unlike']);
+Route::get('posts/{id}/like-status', [PostController::class, 'getLikeStatus']);
