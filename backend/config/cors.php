@@ -17,18 +17,29 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:3000',  // React frontend development
+        'http://localhost:8000',  // Laravel backend development
+        'http://127.0.0.1:3000',  // Alternative localhost format
+        'http://127.0.0.1:8000',  // Alternative localhost format
+    ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'X-Requested-With',
+        'X-CSRF-Token',
+    ],
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400,  // Cache preflight requests for 24 hours
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
