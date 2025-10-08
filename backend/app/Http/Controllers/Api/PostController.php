@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
+use App\Models\Like;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class PostController extends Controller
@@ -169,6 +171,156 @@ class PostController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener los posts del IAnfluencer',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Like a post.
+     */
+    public function like(Request $request, string $id): JsonResponse
+    {
+        try {
+            $post = Post::findOrFail($id);
+
+            // Get user identification (user_id, session_id, or IP)
+            $userId = $request->user() ? $request->user()->id : null;
+            $sessionId = $request->session()->getId();
+            $ipAddress = $request->ip();
+
+            // Check if already liked
+            if ($post->isLikedBy($userId, $sessionId, $ipAddress)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya has dado like a este post'
+                ], Response::HTTP_CONFLICT);
+            }
+
+            // Add the like
+            Like::create([
+                'post_id' => $post->id,
+                'user_id' => $userId,
+                'session_id' => $sessionId,
+                'ip_address' => $ipAddress,
+            ]);
+
+            // Update the post's likes count
+            $post->increment('likes_count');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'likes_count' => $post->fresh()->likes_count,
+                    'is_liked' => true
+                ],
+                'message' => 'Like agregado exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al agregar like',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Unlike a post.
+     */
+    public function unlike(Request $request, string $id): JsonResponse
+    {
+        try {
+            $post = Post::findOrFail($id);
+
+            // Get user identification (user_id, session_id, or IP)
+            $userId = $request->user() ? $request->user()->id : null;
+            $sessionId = $request->session()->getId();
+            $ipAddress = $request->ip();
+
+            // Find and remove the like
+            $query = Like::where('post_id', $post->id);
+
+            if ($userId) {
+                $query->where('user_id', $userId);
+            } elseif ($sessionId) {
+                $query->where('session_id', $sessionId);
+            } else {
+                $query->where('ip_address', $ipAddress);
+            }
+
+            $like = $query->first();
+
+            if (!$like) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No has dado like a este post'
+                ], Response::HTTP_CONFLICT);
+            }
+
+            $like->delete();
+
+            // Update the post's likes count
+            $post->decrement('likes_count');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'likes_count' => $post->fresh()->likes_count,
+                    'is_liked' => false
+                ],
+                'message' => 'Like removido exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al remover like',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get like status for a post.
+     */
+    public function getLikeStatus(Request $request, string $id): JsonResponse
+    {
+        try {
+            $post = Post::findOrFail($id);
+
+            // Get user identification (user_id, session_id, or IP)
+            $userId = $request->user() ? $request->user()->id : null;
+            $sessionId = $request->session()->getId();
+            $ipAddress = $request->ip();
+
+            $isLiked = $post->isLikedBy($userId, $sessionId, $ipAddress);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'likes_count' => $post->likes_count,
+                    'is_liked' => $isLiked
+                ]
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estado del like',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

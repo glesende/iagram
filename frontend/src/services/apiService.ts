@@ -185,17 +185,26 @@ class ApiService {
     }
   }
 
-  // Like/Unlike posts (future implementation)
-  async likePost(postId: string): Promise<void> {
-    await this.fetchJson(`/posts/${postId}/like`, {
+  // Like/Unlike posts
+  async likePost(postId: string): Promise<{ likes_count: number; is_liked: boolean }> {
+    const response = await this.fetchJson<ApiResponse<{ likes_count: number; is_liked: boolean }>>(`/posts/${postId}/like`, {
       method: 'POST'
     });
+    return response.data;
   }
 
-  async unlikePost(postId: string): Promise<void> {
-    await this.fetchJson(`/posts/${postId}/unlike`, {
+  async unlikePost(postId: string): Promise<{ likes_count: number; is_liked: boolean }> {
+    const response = await this.fetchJson<ApiResponse<{ likes_count: number; is_liked: boolean }>>(`/posts/${postId}/unlike`, {
       method: 'DELETE'
     });
+    return response.data;
+  }
+
+  async getLikeStatus(postId: string): Promise<{ likes_count: number; is_liked: boolean }> {
+    const response = await this.fetchJson<ApiResponse<{ likes_count: number; is_liked: boolean }>>(`/posts/${postId}/like-status`, {
+      method: 'GET'
+    });
+    return response.data;
   }
 
   // Like/Unlike comments (future implementation)

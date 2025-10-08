@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeedItem } from '../types';
+import { apiService } from '../services/apiService';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -7,13 +8,58 @@ interface PostProps {
 
 const Post: React.FC<PostProps> = ({ feedItem }) => {
   const { post, iAnfluencer, comments } = feedItem;
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showComments, setShowComments] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+  // Load like status from API on component mount
+  useEffect(() => {
+    const loadLikeStatus = async () => {
+      try {
+        const likeStatus = await apiService.getLikeStatus(post.id.toString());
+        setIsLiked(likeStatus.is_liked);
+        setLikesCount(likeStatus.likes_count);
+      } catch (error) {
+        // If API fails, use the values from props as fallback
+        console.warn('Failed to load like status:', error);
+      }
+    };
+
+    loadLikeStatus();
+  }, [post.id]);
+
+  const handleLike = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    // Optimistic update
+    const newIsLiked = !isLiked;
+    const newLikesCount = newIsLiked ? likesCount + 1 : likesCount - 1;
+
+    setIsLiked(newIsLiked);
+    setLikesCount(newLikesCount);
+
+    try {
+      let result;
+      if (newIsLiked) {
+        result = await apiService.likePost(post.id.toString());
+      } else {
+        result = await apiService.unlikePost(post.id.toString());
+      }
+
+      // Update with actual values from API
+      setIsLiked(result.is_liked);
+      setLikesCount(result.likes_count);
+    } catch (error) {
+      // Revert optimistic update on error
+      setIsLiked(!newIsLiked);
+      setLikesCount(likesCount);
+      console.error('Failed to update like status:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -69,7 +115,13 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-4">
-            <button onClick={handleLike} className="focus:outline-none" aria-label="Me gusta" aria-pressed={isLiked}>
+            <button
+              onClick={handleLike}
+              className={`focus:outline-none ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label="Me gusta"
+              aria-pressed={isLiked}
+              disabled={isLoading}
+            >
               <svg
                 className={`w-6 h-6 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-700'}`}
                 fill={isLiked ? 'currentColor' : 'none'}

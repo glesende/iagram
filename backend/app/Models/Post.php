@@ -36,4 +36,25 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
+    }
+
+    /**
+     * Check if the current user/session has liked this post
+     */
+    public function isLikedBy($userId = null, $sessionId = null, $ipAddress = null)
+    {
+        return Like::existsFor($this->id, $userId, $sessionId, $ipAddress);
+    }
+
+    /**
+     * Get the actual likes count from the database
+     */
+    public function getActualLikesCountAttribute()
+    {
+        return $this->likes()->count();
+    }
 }
