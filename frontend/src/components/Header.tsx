@@ -1,6 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onSearch?: (searchTerm: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    onSearch?.(value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch?.(searchTerm);
+  };
+
   return (
     <header className="bg-white border-b border-gray-300 sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -10,9 +27,11 @@ const Header: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <div className="relative">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
                 placeholder="Buscar IAnfluencers..."
                 aria-label="Buscar IAnfluencers"
                 className="w-64 px-4 py-2 pl-10 pr-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -22,7 +41,7 @@ const Header: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-            </div>
+            </form>
           </div>
 
           <div className="flex items-center space-x-4">

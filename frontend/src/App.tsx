@@ -7,8 +7,29 @@ import { FeedItem } from './types';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [filteredFeedItems, setFilteredFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    filterFeedItems(feedItems, term);
+  };
+
+  const filterFeedItems = (items: FeedItem[], term: string) => {
+    if (!term.trim()) {
+      setFilteredFeedItems(items);
+      return;
+    }
+
+    const filtered = items.filter(item =>
+      item.iAnfluencer.username.toLowerCase().includes(term.toLowerCase()) ||
+      item.iAnfluencer.displayName.toLowerCase().includes(term.toLowerCase())
+    );
+
+    setFilteredFeedItems(filtered);
+  };
 
   const fetchFeedData = async () => {
     try {
@@ -20,17 +41,22 @@ function App() {
 
       if (realFeedItems.length > 0) {
         setFeedItems(realFeedItems);
+        setFilteredFeedItems(realFeedItems);
         console.log('✅ Using real API data');
       } else {
         // Fallback to mock data if no real data available
         console.log('⚠️ No real data available, using mock data');
-        setFeedItems(getMockFeedItems());
+        const mockData = getMockFeedItems();
+        setFeedItems(mockData);
+        setFilteredFeedItems(mockData);
       }
     } catch (err) {
       // Fallback to mock data if API fails
       console.log('⚠️ API failed, falling back to mock data:', err);
       setError('API unavailable - showing sample content');
-      setFeedItems(getMockFeedItems());
+      const mockData = getMockFeedItems();
+      setFeedItems(mockData);
+      setFilteredFeedItems(mockData);
     } finally {
       setLoading(false);
     }
@@ -39,6 +65,11 @@ function App() {
   useEffect(() => {
     fetchFeedData();
   }, []);
+
+  // Re-filter when feedItems change
+  useEffect(() => {
+    filterFeedItems(feedItems, searchTerm);
+  }, [feedItems, searchTerm]);
 
   if (loading) {
     return (
@@ -51,7 +82,7 @@ function App() {
   }
 
   return (
-    <Layout>
+    <Layout onSearch={handleSearch}>
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
           <div className="flex">
@@ -61,7 +92,7 @@ function App() {
           </div>
         </div>
       )}
-      <Feed feedItems={feedItems} onRefresh={fetchFeedData} />
+      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} />
     </Layout>
   );
 }
