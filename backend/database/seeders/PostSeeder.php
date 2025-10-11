@@ -6,15 +6,40 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Post;
 use App\Models\IAnfluencer;
+use App\Services\OpenAIService;
+use App\Services\ImageStorageService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PostSeeder extends Seeder
 {
+    protected OpenAIService $openAIService;
+    protected ImageStorageService $imageStorageService;
+    protected bool $generateImages = false;
+    protected int $imagesGenerated = 0;
+    protected int $maxImages = 3; // Limit for seeder to control costs
+
+    public function __construct(OpenAIService $openAIService, ImageStorageService $imageStorageService)
+    {
+        $this->openAIService = $openAIService;
+        $this->imageStorageService = $imageStorageService;
+
+        // Check if we should generate images (via environment variable)
+        $this->generateImages = env('SEED_GENERATE_IMAGES', false);
+    }
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
+        if ($this->generateImages) {
+            $this->command->info('📸 Image generation is ENABLED for seeding (max ' . $this->maxImages . ' images)');
+            $this->imageStorageService->ensurePostsDirectoryExists();
+        } else {
+            $this->command->warn('⚠️  Image generation is DISABLED for seeding. Set SEED_GENERATE_IMAGES=true to enable.');
+        }
+
         $ianfluencers = IAnfluencer::all();
 
         // Posts for Maya LifeStyle (ai_lifestyle_guru)
@@ -54,7 +79,7 @@ class PostSeeder extends Seeder
             ];
 
             foreach ($mayaPosts as $index => $postData) {
-                Post::create([
+                $post = Post::create([
                     'i_anfluencer_id' => $mayaId,
                     'content' => $postData['content'],
                     'image_url' => null,
@@ -70,6 +95,8 @@ class PostSeeder extends Seeder
                     'is_ai_generated' => true,
                     'published_at' => Carbon::now()->subDays(7 - $index)->subHours(rand(8, 18))
                 ]);
+
+                $this->generateImageForPost($post, $postData['image_description']);
             }
         }
 
@@ -110,7 +137,7 @@ class PostSeeder extends Seeder
             ];
 
             foreach ($alexPosts as $index => $postData) {
-                Post::create([
+                $post = Post::create([
                     'i_anfluencer_id' => $alexId,
                     'content' => $postData['content'],
                     'image_url' => null,
@@ -126,6 +153,8 @@ class PostSeeder extends Seeder
                     'is_ai_generated' => true,
                     'published_at' => Carbon::now()->subDays(6 - $index)->subHours(rand(9, 17))
                 ]);
+
+                $this->generateImageForPost($post, $postData['image_description']);
             }
         }
 
@@ -166,7 +195,7 @@ class PostSeeder extends Seeder
             ];
 
             foreach ($sophiaPosts as $index => $postData) {
-                Post::create([
+                $post = Post::create([
                     'i_anfluencer_id' => $sophiaId,
                     'content' => $postData['content'],
                     'image_url' => null,
@@ -182,7 +211,42 @@ class PostSeeder extends Seeder
                     'is_ai_generated' => true,
                     'published_at' => Carbon::now()->subDays(5 - $index)->subHours(rand(11, 19))
                 ]);
+
+                $this->generateImageForPost($post, $postData['image_description']);
             }
+        }
+
+        if ($this->generateImages && $this->imagesGenerated > 0) {
+            $this->command->info("✅ Total images generated: {$this->imagesGenerated}");
+        }
+    }
+
+    /**
+     * Generate an image for a post if enabled and under limit
+     */
+    private function generateImageForPost(Post $post, string $imageDescription): void
+    {
+        if (!$this->generateImages || $this->imagesGenerated >= $this->maxImages) {
+            return;
+        }
+
+        try {
+            $this->command->line("  🎨 Generating image for post {$post->id}...");
+
+            $imageUrl = $this->openAIService->generateImage($imageDescription);
+            $storedImagePath = $this->imageStorageService->downloadAndStoreImage($imageUrl, $post->id);
+
+            $post->update(['image_url' => $storedImagePath]);
+
+            $this->imagesGenerated++;
+            $this->command->info("  ✅ Image generated ({$this->imagesGenerated}/{$this->maxImages})");
+
+        } catch (\Exception $e) {
+            $this->command->warn("  ⚠️ Failed to generate image: " . $e->getMessage());
+            Log::warning("Image generation failed during seeding for post {$post->id}", [
+                'error' => $e->getMessage(),
+                'description' => $imageDescription
+            ]);
         }
     }
 }
