@@ -5,9 +5,14 @@ import { FeedItem } from '../types';
 interface FeedProps {
   feedItems: FeedItem[];
   onRefresh?: () => void;
+  onClearSearch?: () => void;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
+  const handleExploreClick = () => {
+    onClearSearch?.();
+    onRefresh?.();
+  };
   return (
     <div className="max-w-md mx-auto py-6">
       {feedItems.length === 0 ? (
@@ -67,7 +72,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh }) => {
               {/* Botón de acción */}
               {onRefresh && (
                 <button
-                  onClick={onRefresh}
+                  onClick={handleExploreClick}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
