@@ -27,7 +27,7 @@ class Like extends Model
     }
 
     /**
-     * Check if a like exists for a given post and identifier (user, session, or IP)
+     * Check if a like exists for a given post and identifier (user or IP)
      */
     public static function existsFor($postId, $userId = null, $sessionId = null, $ipAddress = null)
     {
@@ -35,10 +35,10 @@ class Like extends Model
 
         if ($userId) {
             $query->where('user_id', $userId);
-        } elseif ($sessionId) {
-            $query->where('session_id', $sessionId);
         } elseif ($ipAddress) {
-            $query->where('ip_address', $ipAddress);
+            // When no user is authenticated, check by IP and ensure user_id is null
+            $query->where('ip_address', $ipAddress)
+                  ->whereNull('user_id');
         }
 
         return $query->exists();
