@@ -184,6 +184,49 @@ Provide the response in JSON format with the following fields:
         return $this->generateChatCompletion($messages, ['temperature' => 0.7, 'max_tokens' => 200]);
     }
 
+    /**
+     * Generate an image using DALL-E based on a description
+     *
+     * @param string $description The description of the image to generate
+     * @param array $options Additional options (size, quality, style)
+     * @return string The URL of the generated image
+     * @throws Exception If image generation fails
+     */
+    public function generateImage(string $description, array $options = []): string
+    {
+        try {
+            $model = $options['model'] ?? config('openai.models.image', 'dall-e-3');
+            $size = $options['size'] ?? config('openai.image.size', '1024x1024');
+            $quality = $options['quality'] ?? config('openai.image.quality', 'standard');
+            $style = $options['style'] ?? config('openai.image.style', 'vivid');
+
+            // Ensure the description is suitable for DALL-E (max 4000 characters for DALL-E 3)
+            $cleanDescription = mb_substr($description, 0, 4000);
+
+            $response = $this->client->images()->create([
+                'model' => $model,
+                'prompt' => $cleanDescription,
+                'size' => $size,
+                'quality' => $quality,
+                'style' => $style,
+                'n' => 1, // Generate only 1 image
+            ]);
+
+            // Get the URL from the first generated image
+            $imageUrl = $response->data[0]->url;
+
+            if (!$imageUrl) {
+                throw new Exception('No image URL returned from OpenAI');
+            }
+
+            return $imageUrl;
+
+        } catch (Exception $e) {
+            Log::error('OpenAI Image Generation Error: ' . $e->getMessage());
+            throw new Exception('Error generating image from OpenAI: ' . $e->getMessage());
+        }
+    }
+
     public function getClient(): OpenAI
     {
         return $this->client;

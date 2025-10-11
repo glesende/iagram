@@ -28,4 +28,12 @@ return [
         'comment_temperature' => env('OPENAI_COMMENT_TEMPERATURE', 0.9),
         'max_previous_posts' => env('OPENAI_MAX_PREVIOUS_POSTS', 5),
     ],
+
+    // Image generation settings
+    'image' => [
+        'size' => env('OPENAI_IMAGE_SIZE', '1024x1024'), // Options: 1024x1024, 1792x1024, 1024x1792
+        'quality' => env('OPENAI_IMAGE_QUALITY', 'standard'), // Options: standard, hd
+        'style' => env('OPENAI_IMAGE_STYLE', 'vivid'), // Options: vivid, natural
+        'max_per_execution' => env('OPENAI_MAX_IMAGES_PER_EXECUTION', 5), // Limit to control API costs
+    ],
 ];

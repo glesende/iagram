@@ -5,29 +5,47 @@ namespace App\Console\Commands;
 use App\Models\IAnfluencer;
 use App\Models\Post;
 use App\Services\OpenAIService;
+use App\Services\ImageStorageService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GeneratePostsCommand extends Command
 {
-    protected $signature = 'iagram:generate-posts {--count=3 : Maximum posts per IAnfluencer}';
+    protected $signature = 'iagram:generate-posts
+                            {--count=3 : Maximum posts per IAnfluencer}
+                            {--skip-images : Skip image generation to save API costs}';
 
     protected $description = 'Generate automatic posts for IAnfluencers using AI';
 
     protected OpenAIService $openAIService;
+    protected ImageStorageService $imageStorageService;
+    protected int $imagesGenerated = 0;
+    protected int $maxImagesPerExecution;
 
-    public function __construct(OpenAIService $openAIService)
+    public function __construct(OpenAIService $openAIService, ImageStorageService $imageStorageService)
     {
         parent::__construct();
         $this->openAIService = $openAIService;
+        $this->imageStorageService = $imageStorageService;
+        $this->maxImagesPerExecution = config('openai.image.max_per_execution', 5);
     }
 
     public function handle(): int
     {
         $maxPostsPerInfluencer = (int) $this->option('count');
+        $skipImages = $this->option('skip-images');
 
         $this->info('🤖 Starting automatic post generation for IAnfluencers...');
+
+        if ($skipImages) {
+            $this->warn('⚠️  Image generation is DISABLED. Posts will be created without images.');
+        } else {
+            $this->info("📸 Image generation enabled (max {$this->maxImagesPerExecution} images per execution)");
+        }
+
+        // Ensure storage directory exists
+        $this->imageStorageService->ensurePostsDirectoryExists();
 
         $activeInfluencers = IAnfluencer::where('is_active', true)->get();
 
@@ -43,7 +61,7 @@ class GeneratePostsCommand extends Command
 
             try {
                 $postsToGenerate = rand(1, $maxPostsPerInfluencer);
-                $postsGenerated = $this->generatePostsForInfluencer($influencer, $postsToGenerate);
+                $postsGenerated = $this->generatePostsForInfluencer($influencer, $postsToGenerate, $skipImages);
 
                 $totalPostsGenerated += $postsGenerated;
                 $this->info("  ✅ Generated {$postsGenerated} posts for @{$influencer->username}");
@@ -59,10 +77,14 @@ class GeneratePostsCommand extends Command
 
         $this->info("🎉 Generation completed! Total posts created: {$totalPostsGenerated}");
 
+        if (!$skipImages) {
+            $this->info("📸 Total images generated: {$this->imagesGenerated}");
+        }
+
         return self::SUCCESS;
     }
 
-    private function generatePostsForInfluencer(IAnfluencer $influencer, int $count): int
+    private function generatePostsForInfluencer(IAnfluencer $influencer, int $count, bool $skipImages = false): int
     {
         $postsGenerated = 0;
 
@@ -81,10 +103,11 @@ class GeneratePostsCommand extends Command
                     continue;
                 }
 
+                // Create the post first without image
                 $post = Post::create([
                     'i_anfluencer_id' => $influencer->id,
                     'content' => $generatedPost['content'],
-                    'image_url' => null, // Will be set later when image generation is implemented
+                    'image_url' => null,
                     'ai_generation_params' => [
                         'model' => config('openai.models.chat', 'gpt-3.5-turbo'),
                         'temperature' => config('openai.influencer.post_temperature', 0.8),
@@ -98,6 +121,40 @@ class GeneratePostsCommand extends Command
                 ]);
 
                 $postsGenerated++;
+
+                // Generate image if enabled and limit not reached
+                if (!$skipImages && $this->imagesGenerated < $this->maxImagesPerExecution) {
+                    $imageDescription = $generatedPost['image_description'] ?? null;
+
+                    if ($imageDescription) {
+                        try {
+                            $this->line("    🎨 Generating image for post {$post->id}...");
+
+                            $imageUrl = $this->openAIService->generateImage($imageDescription);
+
+                            // Download and store the image
+                            $storedImagePath = $this->imageStorageService->downloadAndStoreImage($imageUrl, $post->id);
+
+                            // Update the post with the image URL
+                            $post->update(['image_url' => $storedImagePath]);
+
+                            $this->imagesGenerated++;
+                            $this->info("    ✅ Image generated and stored ({$this->imagesGenerated}/{$this->maxImagesPerExecution})");
+
+                            // Delay after image generation to respect API rate limits
+                            sleep(2);
+
+                        } catch (\Exception $e) {
+                            $this->warn("    ⚠️ Failed to generate image: " . $e->getMessage());
+                            Log::warning("Image generation failed for post {$post->id}", [
+                                'error' => $e->getMessage(),
+                                'description' => $imageDescription
+                            ]);
+                        }
+                    }
+                } elseif (!$skipImages && $this->imagesGenerated >= $this->maxImagesPerExecution) {
+                    $this->warn("    ⚠️ Image generation limit reached ({$this->maxImagesPerExecution}), skipping image");
+                }
 
                 // Small delay to avoid overwhelming the API
                 sleep(1);
