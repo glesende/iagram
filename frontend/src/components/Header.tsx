@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
+  searchTerm?: string;
+  onClearSearch?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Sync internal state with external searchTerm prop
+  useEffect(() => {
+    if (externalSearchTerm !== undefined) {
+      setSearchTerm(externalSearchTerm);
+    }
+  }, [externalSearchTerm]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

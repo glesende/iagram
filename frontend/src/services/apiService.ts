@@ -46,6 +46,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, {
+        credentials: 'include', // Send cookies with cross-origin requests for session support
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

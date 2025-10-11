@@ -184,9 +184,9 @@ class PostController extends Controller
         try {
             $post = Post::findOrFail($id);
 
-            // Get user identification (user_id, session_id, or IP)
+            // Get user identification (user_id or IP)
             $userId = $request->user() ? $request->user()->id : null;
-            $sessionId = $request->session()->getId();
+            $sessionId = null; // No longer using sessions in API
             $ipAddress = $request->ip();
 
             // Check if already liked
@@ -238,9 +238,9 @@ class PostController extends Controller
         try {
             $post = Post::findOrFail($id);
 
-            // Get user identification (user_id, session_id, or IP)
+            // Get user identification (user_id or IP)
             $userId = $request->user() ? $request->user()->id : null;
-            $sessionId = $request->session()->getId();
+            $sessionId = null; // No longer using sessions in API
             $ipAddress = $request->ip();
 
             // Find and remove the like
@@ -248,10 +248,9 @@ class PostController extends Controller
 
             if ($userId) {
                 $query->where('user_id', $userId);
-            } elseif ($sessionId) {
-                $query->where('session_id', $sessionId);
             } else {
-                $query->where('ip_address', $ipAddress);
+                $query->where('ip_address', $ipAddress)
+                      ->whereNull('user_id');
             }
 
             $like = $query->first();
@@ -298,9 +297,9 @@ class PostController extends Controller
         try {
             $post = Post::findOrFail($id);
 
-            // Get user identification (user_id, session_id, or IP)
+            // Get user identification (user_id or IP)
             $userId = $request->user() ? $request->user()->id : null;
-            $sessionId = $request->session()->getId();
+            $sessionId = null; // No longer using sessions in API
             $ipAddress = $request->ip();
 
             $isLiked = $post->isLikedBy($userId, $sessionId, $ipAddress);
