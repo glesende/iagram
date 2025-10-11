@@ -17,6 +17,11 @@ function App() {
     filterFeedItems(feedItems, term);
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    filterFeedItems(feedItems, '');
+  };
+
   const filterFeedItems = (items: FeedItem[], term: string) => {
     if (!term.trim()) {
       setFilteredFeedItems(items);
@@ -82,7 +87,7 @@ function App() {
   }
 
   return (
-    <Layout onSearch={handleSearch}>
+    <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch}>
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
           <div className="flex">
@@ -92,7 +97,7 @@ function App() {
           </div>
         </div>
       )}
-      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} />
+      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} onClearSearch={handleClearSearch} />
     </Layout>
   );
 }
