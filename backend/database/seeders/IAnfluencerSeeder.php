@@ -23,6 +23,7 @@ class IAnfluencerSeeder extends Seeder
                 'niche' => 'lifestyle',
                 'followers_count' => 15420,
                 'following_count' => 350,
+                'avatar_url' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=maya&backgroundColor=b6e3f4&hair=long01&hairColor=4a312c&top=longHairStraight&accessories=prescription02',
             ],
             [
                 'username' => 'tech_innovator_ai',
@@ -33,6 +34,7 @@ class IAnfluencerSeeder extends Seeder
                 'niche' => 'technology',
                 'followers_count' => 23140,
                 'following_count' => 180,
+                'avatar_url' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex&backgroundColor=c0aede&hair=short01&hairColor=2c1b18&top=shortHairShortFlat&accessories=prescription01',
             ],
             [
                 'username' => 'foodie_ai_explorer',
@@ -43,6 +45,7 @@ class IAnfluencerSeeder extends Seeder
                 'niche' => 'food',
                 'followers_count' => 18760,
                 'following_count' => 420,
+                'avatar_url' => 'https://api.dicebear.com/7.x/avataaars/svg?seed=sophia&backgroundColor=ffd5dc&hair=long02&hairColor=724133&top=longHairBigHair&accessories=none',
             ]
         ];
 
