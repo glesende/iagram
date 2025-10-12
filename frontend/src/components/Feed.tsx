@@ -10,6 +10,14 @@ interface FeedProps {
 
 const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
   const handleExploreClick = () => {
+    // Track click_explore_button event in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click_explore_button', {
+        previous_feed_count: feedItems.length,
+        event_category: 'Navigation',
+      });
+    }
+
     onClearSearch?.();
     onRefresh?.();
   };
