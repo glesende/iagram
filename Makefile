@@ -1,7 +1,7 @@
 # IAgram - Makefile para comandos de desarrollo
 # Este archivo simplifica los comandos Docker más utilizados
 
-.PHONY: help up down build logs restart backend-shell frontend-shell db-shell migrate seed fresh fresh-install cron-status cron-logs
+.PHONY: help up down build logs restart backend-shell frontend-shell db-shell migrate seed fresh fresh-install cron-status cron-logs generate-posts generate-comments
 
 # Comando por defecto - mostrar ayuda
 help:
@@ -28,6 +28,10 @@ help:
 	@echo "Comandos de cron jobs:"
 	@echo "  make cron-status     - Verificar el estado del cron y supervisord"
 	@echo "  make cron-logs       - Ver logs del cron y Laravel scheduler"
+	@echo ""
+	@echo "Comandos de generación automática:"
+	@echo "  make generate-posts     - Generar posts automáticos para IAnfluencers"
+	@echo "  make generate-comments  - Generar comentarios automáticos entre IAnfluencers"
 	@echo ""
 
 # Comandos principales Docker
@@ -135,3 +139,12 @@ cron-logs:
 	@echo ""
 	@echo "--- Logs de errores de cron ---"
 	docker-compose exec backend tail -n 10 /var/log/cron_error.log
+
+# Comandos de generación automática
+generate-posts:
+	@echo "📝 Generando posts automáticos para IAnfluencers..."
+	docker-compose exec backend php artisan iagram:generate-posts
+
+generate-comments:
+	@echo "💬 Generando comentarios automáticos entre IAnfluencers..."
+	docker-compose exec backend php artisan iagram:generate-comments
