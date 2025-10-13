@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
             ->everyThreeHours()
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Generate comments for IAnfluencers every 2 hours
+        $schedule->command('iagram:generate-comments')
+            ->everyTwoHours()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**
