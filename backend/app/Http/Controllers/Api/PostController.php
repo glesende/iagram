@@ -221,6 +221,19 @@ class PostController extends Controller
                 'success' => false,
                 'message' => 'Post no encontrado'
             ], Response::HTTP_NOT_FOUND);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation (duplicate like)
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya has dado like a este post'
+                ], Response::HTTP_CONFLICT);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de base de datos al agregar like',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

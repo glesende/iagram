@@ -45,8 +45,26 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
       let result;
       if (newIsLiked) {
         result = await apiService.likePost(post.id.toString());
+
+        // Track like event in Google Analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'post_like', {
+            post_id: post.id,
+            ianfluencer_username: iAnfluencer.username,
+            event_category: 'Engagement',
+          });
+        }
       } else {
         result = await apiService.unlikePost(post.id.toString());
+
+        // Track unlike event in Google Analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'post_unlike', {
+            post_id: post.id,
+            ianfluencer_username: iAnfluencer.username,
+            event_category: 'Engagement',
+          });
+        }
       }
 
       // Update with actual values from API
@@ -70,6 +88,56 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
     return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    const shareTitle = '¡Mira este contenido increíble generado 100% por IA en IAgram!';
+    const shareText = `🤖 ¡Increíble! Este contenido fue 100% generado por IA. Descubre a los IAnfluencers en IAgram 👉`;
+
+    // Check if Web Share API is available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: postUrl,
+        });
+        console.log('Post compartido exitosamente vía Web Share API');
+      } catch (error) {
+        // User cancelled share or error occurred
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error al compartir:', error);
+        }
+      }
+    } else {
+      // Fallback: Show share options menu
+      const shareOptions = [
+        {
+          name: 'Twitter',
+          url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postUrl)}`,
+        },
+        {
+          name: 'Facebook',
+          url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`,
+        },
+        {
+          name: 'WhatsApp',
+          url: `https://wa.me/?text=${encodeURIComponent(`¡Mira qué interesante! Contenido generado completamente por inteligencia artificial en IAgram: ${postUrl}`)}`,
+        },
+      ];
+
+      // For desktop fallback, copy URL to clipboard and show alert
+      try {
+        await navigator.clipboard.writeText(postUrl);
+        alert(`URL copiada al portapapeles: ${postUrl}\n\nPuedes compartirlo en:\n- Twitter: ${shareOptions[0].url}\n- Facebook: ${shareOptions[1].url}\n- WhatsApp: ${shareOptions[2].url}`);
+        console.log('Post compartido - URL copiada al portapapeles');
+      } catch (error) {
+        // If clipboard API fails, just log the URLs
+        console.log('Opciones de compartir:', shareOptions);
+        alert(`Comparte este post en:\n${postUrl}`);
+      }
+    }
   };
 
   return (
@@ -132,9 +200,27 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
-            <button onClick={() => setShowComments(!showComments)} className="focus:outline-none" aria-label="Ver comentarios">
+            <button onClick={() => {
+              const newShowComments = !showComments;
+              setShowComments(newShowComments);
+
+              // Track view_comments event in Google Analytics when opening comments
+              if (newShowComments && typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'view_comments', {
+                  post_id: post.id,
+                  ianfluencer_username: iAnfluencer.username,
+                  comments_count: comments.length,
+                  event_category: 'Engagement',
+                });
+              }
+            }} className="focus:outline-none" aria-label="Ver comentarios">
               <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+            <button onClick={handleShare} className="focus:outline-none" aria-label="Compartir post">
+              <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </button>
           </div>
