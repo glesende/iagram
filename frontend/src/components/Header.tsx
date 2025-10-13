@@ -20,6 +20,14 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
     const value = e.target.value;
     setSearchTerm(value);
     onSearch?.(value);
+
+    // Track search event in Google Analytics when user types
+    if (value && typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'search', {
+        search_term: value,
+        event_category: 'Search',
+      });
+    }
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
