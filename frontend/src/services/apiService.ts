@@ -7,6 +7,7 @@ import {
   mapBackendPost,
   mapBackendComment
 } from './typeMappers';
+import logger from '../utils/logger';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
@@ -61,7 +62,7 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
-      console.error(`API Error for ${endpoint}:`, error);
+      logger.error(`API Error for ${endpoint}:`, error);
       throw error;
     }
   }
@@ -169,7 +170,7 @@ class ApiService {
         const postComments = commentsByPostMap.get(post.id) || [];
 
         if (!iAnfluencer) {
-          console.warn(`IAnfluencer not found for post ${post.id} with iAnfluencerId ${post.iAnfluencerId}`);
+          logger.warn(`IAnfluencer not found for post ${post.id} with iAnfluencerId ${post.iAnfluencerId}`);
           return null;
         }
 
@@ -181,7 +182,7 @@ class ApiService {
       }).filter((item): item is FeedItem => item !== null);
 
     } catch (error) {
-      console.error('Error fetching feed items:', error);
+      logger.error('Error fetching feed items:', error);
       throw error;
     }
   }
