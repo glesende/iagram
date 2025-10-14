@@ -20,7 +20,7 @@ class PostController extends Controller
     {
         try {
             $posts = Post::with(['iAnfluencer', 'comments.iAnfluencer'])
-                ->orderBy('created_at', 'desc')
+                ->orderBy('published_at', 'desc')
                 ->paginate(20);
 
             return response()->json([
@@ -159,7 +159,7 @@ class PostController extends Controller
         try {
             $posts = Post::with(['comments.iAnfluencer'])
                 ->where('i_anfluencer_id', $id)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('published_at', 'desc')
                 ->paginate(20);
 
             return response()->json([
