@@ -4,6 +4,7 @@ import Feed from './components/Feed';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
+import logger from './utils/logger';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -47,17 +48,17 @@ function App() {
       if (realFeedItems.length > 0) {
         setFeedItems(realFeedItems);
         setFilteredFeedItems(realFeedItems);
-        console.log('✅ Using real API data');
+        logger.log('✅ Using real API data');
       } else {
         // Fallback to mock data if no real data available
-        console.log('⚠️ No real data available, using mock data');
+        logger.warn('⚠️ No real data available, using mock data');
         const mockData = getMockFeedItems();
         setFeedItems(mockData);
         setFilteredFeedItems(mockData);
       }
     } catch (err) {
       // Fallback to mock data if API fails
-      console.log('⚠️ API failed, falling back to mock data:', err);
+      logger.warn('⚠️ API failed, falling back to mock data:', err);
       setError('API unavailable - showing sample content');
       const mockData = getMockFeedItems();
       setFeedItems(mockData);

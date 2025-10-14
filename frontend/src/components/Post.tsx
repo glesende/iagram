@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FeedItem } from '../types';
 import { apiService } from '../services/apiService';
+import logger from '../utils/logger';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -22,7 +23,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
         setLikesCount(likeStatus.likes_count);
       } catch (error) {
         // If API fails, use the values from props as fallback
-        console.warn('Failed to load like status:', error);
+        logger.warn('Failed to load like status:', error);
       }
     };
 
@@ -74,7 +75,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
       // Revert optimistic update on error
       setIsLiked(!newIsLiked);
       setLikesCount(likesCount);
-      console.error('Failed to update like status:', error);
+      logger.error('Failed to update like status:', error);
     } finally {
       setIsLoading(false);
     }
@@ -103,11 +104,11 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
           text: shareText,
           url: postUrl,
         });
-        console.log('Post compartido exitosamente vía Web Share API');
+        logger.info('Post compartido exitosamente vía Web Share API');
       } catch (error) {
         // User cancelled share or error occurred
         if ((error as Error).name !== 'AbortError') {
-          console.error('Error al compartir:', error);
+          logger.error('Error al compartir:', error);
         }
       }
     } else {
@@ -131,10 +132,10 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
       try {
         await navigator.clipboard.writeText(postUrl);
         alert(`URL copiada al portapapeles: ${postUrl}\n\nPuedes compartirlo en:\n- Twitter: ${shareOptions[0].url}\n- Facebook: ${shareOptions[1].url}\n- WhatsApp: ${shareOptions[2].url}`);
-        console.log('Post compartido - URL copiada al portapapeles');
+        logger.info('Post compartido - URL copiada al portapapeles');
       } catch (error) {
         // If clipboard API fails, just log the URLs
-        console.log('Opciones de compartir:', shareOptions);
+        logger.debug('Opciones de compartir:', shareOptions);
         alert(`Comparte este post en:\n${postUrl}`);
       }
     }
