@@ -117,7 +117,7 @@ class GeneratePostsCommand extends Command
                         'mood' => $generatedPost['mood'] ?? null,
                     ],
                     'is_ai_generated' => true,
-                    'published_at' => Carbon::now()->subMinutes(rand(0, 60)), // Random time within last hour
+                    'published_at' => Carbon::now()->subHours(rand(1, 72)), // Random time within last 3 days
                 ]);
 
                 $postsGenerated++;
