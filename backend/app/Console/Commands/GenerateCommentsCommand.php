@@ -151,6 +151,9 @@ class GenerateCommentsCommand extends Command
                 return 0;
             }
 
+            // Check if this is the first interaction between these IAnfluencers
+            $isFirstInteraction = $this->isFirstInteraction($commenter->id, $postAuthor->id);
+
             // Create the comment
             Comment::create([
                 'post_id' => $post->id,
@@ -166,6 +169,11 @@ class GenerateCommentsCommand extends Command
 
             // Update the comments count on the post
             $post->increment('comments_count');
+
+            // If this is the first interaction, establish a follow relationship
+            if ($isFirstInteraction) {
+                $this->establishFollowRelationship($commenter, $postAuthor);
+            }
 
             $this->info("  ✅ @{$commenter->username} commented on @{$postAuthor->username}'s post");
 
@@ -195,5 +203,36 @@ class GenerateCommentsCommand extends Command
 
         // Default relationship
         return 'fellow influencer';
+    }
+
+    /**
+     * Check if this is the first interaction between the commenter and the post author
+     */
+    private function isFirstInteraction(int $commenterId, int $postAuthorId): bool
+    {
+        // Check if the commenter has ever commented on any post by the post author
+        return !Comment::where('i_anfluencer_id', $commenterId)
+            ->whereHas('post', function ($query) use ($postAuthorId) {
+                $query->where('i_anfluencer_id', $postAuthorId);
+            })
+            ->exists();
+    }
+
+    /**
+     * Establish a follow relationship between commenter and post author
+     */
+    private function establishFollowRelationship(IAnfluencer $commenter, IAnfluencer $postAuthor): void
+    {
+        // Increment followers_count for the post author (they gain a follower)
+        $postAuthor->increment('followers_count');
+
+        // Increment following_count for the commenter (they are now following someone new)
+        $commenter->increment('following_count');
+
+        // Refresh models to get updated counts
+        $postAuthor->refresh();
+        $commenter->refresh();
+
+        $this->info("  🔔 @{$commenter->username} now follows @{$postAuthor->username} (followers: {$postAuthor->followers_count})");
     }
 }
