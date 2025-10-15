@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Feed from './components/Feed';
+import Login from './components/Login';
+import Register from './components/Register';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -12,6 +14,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -88,18 +92,46 @@ function App() {
   }
 
   return (
-    <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch}>
-      {error && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
-          <div className="flex">
-            <div className="text-yellow-800">
-              <strong>Modo Demo:</strong> {error}
+    <>
+      <Layout
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
+        onClearSearch={handleClearSearch}
+        onOpenLogin={() => setShowLogin(true)}
+        onOpenRegister={() => setShowRegister(true)}
+      >
+        {error && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
+            <div className="flex">
+              <div className="text-yellow-800">
+                <strong>Modo Demo:</strong> {error}
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} onClearSearch={handleClearSearch} />
+      </Layout>
+
+      {showLogin && (
+        <Login
+          onClose={() => setShowLogin(false)}
+          onSwitchToRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+        />
       )}
-      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} onClearSearch={handleClearSearch} />
-    </Layout>
+
+      {showRegister && (
+        <Register
+          onClose={() => setShowRegister(false)}
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+        />
+      )}
+    </>
   );
 }
 

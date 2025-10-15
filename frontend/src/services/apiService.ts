@@ -42,6 +42,20 @@ interface PaginatedApiResponse<T> {
 }
 
 class ApiService {
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem('auth_token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
   private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -49,8 +63,7 @@ class ApiService {
       const response = await fetch(url, {
         credentials: 'include', // Send cookies with cross-origin requests for session support
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          ...this.getAuthHeaders(),
           ...options?.headers,
         },
         ...options,

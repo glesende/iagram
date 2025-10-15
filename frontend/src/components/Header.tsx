@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
   searchTerm?: string;
   onClearSearch?: () => void;
+  onOpenLogin?: () => void;
+  onOpenRegister?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch, onOpenLogin, onOpenRegister }) => {
+  const { user, logout, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Sync internal state with external searchTerm prop
   useEffect(() => {
@@ -62,11 +67,53 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Favoritos">
-              <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Menú de usuario"
+                >
+                  <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    {user?.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden md:block text-gray-700 font-medium">{user?.name}</span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-sm text-gray-700 font-medium">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={onOpenLogin}
+                  className="px-4 py-2 text-purple-600 font-medium hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  onClick={onOpenRegister}
+                  className="px-4 py-2 bg-purple-600 text-white font-medium hover:bg-purple-700 rounded-lg transition-colors"
+                >
+                  Registrarse
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
