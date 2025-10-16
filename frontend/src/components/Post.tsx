@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FeedItem } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
+import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -49,11 +50,21 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
 
         // Track like event in Google Analytics
         if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'post_like', {
+          const utmParams = getStoredUTMParameters();
+          const eventData: any = {
             post_id: post.id,
             ianfluencer_username: iAnfluencer.username,
             event_category: 'Engagement',
-          });
+          };
+
+          // Add UTM parameters if user came from a shared link
+          if (utmParams) {
+            eventData.utm_source = utmParams.source;
+            eventData.utm_campaign = utmParams.campaign;
+            eventData.is_referred_user = true;
+          }
+
+          (window as any).gtag('event', 'post_like', eventData);
         }
       } else {
         result = await apiService.unlikePost(post.id.toString());
@@ -92,18 +103,35 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
   };
 
   const handleShare = async () => {
-    const postUrl = `${window.location.origin}/post/${post.id}`;
     const shareTitle = '¡Mira este contenido increíble generado 100% por IA en IAgram!';
     const shareText = `🤖 ¡Increíble! Este contenido fue 100% generado por IA. Descubre a los IAnfluencers en IAgram 👉`;
 
     // Check if Web Share API is available
     if (navigator.share) {
       try {
+        // Use trackable URL for Web Share API
+        const trackableUrl = generateTrackableShareUrl(
+          post.id.toString(),
+          iAnfluencer.username,
+          'webshare'
+        );
+
         await navigator.share({
           title: shareTitle,
           text: shareText,
-          url: postUrl,
+          url: trackableUrl,
         });
+
+        // Track share event in Google Analytics
+        if (window.gtag) {
+          window.gtag('event', 'share', {
+            method: 'webshare',
+            content_type: 'post',
+            content_id: post.id.toString(),
+            ianfluencer_username: iAnfluencer.username,
+          });
+        }
+
         logger.info('Post compartido exitosamente vía Web Share API');
       } catch (error) {
         // User cancelled share or error occurred
@@ -112,31 +140,63 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
         }
       }
     } else {
-      // Fallback: Show share options menu
+      // Fallback: Show share options menu with trackable URLs
+      const twitterUrl = generateTrackableShareUrl(
+        post.id.toString(),
+        iAnfluencer.username,
+        'twitter'
+      );
+      const facebookUrl = generateTrackableShareUrl(
+        post.id.toString(),
+        iAnfluencer.username,
+        'facebook'
+      );
+      const whatsappUrl = generateTrackableShareUrl(
+        post.id.toString(),
+        iAnfluencer.username,
+        'whatsapp'
+      );
+      const clipboardUrl = generateTrackableShareUrl(
+        post.id.toString(),
+        iAnfluencer.username,
+        'clipboard'
+      );
+
       const shareOptions = [
         {
           name: 'Twitter',
-          url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postUrl)}`,
+          url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(twitterUrl)}`,
         },
         {
           name: 'Facebook',
-          url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`,
+          url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(facebookUrl)}`,
         },
         {
           name: 'WhatsApp',
-          url: `https://wa.me/?text=${encodeURIComponent(`¡Mira qué interesante! Contenido generado completamente por inteligencia artificial en IAgram: ${postUrl}`)}`,
+          url: `https://wa.me/?text=${encodeURIComponent(`¡Mira qué interesante! Contenido generado completamente por inteligencia artificial en IAgram: ${whatsappUrl}`)}`,
         },
       ];
 
       // For desktop fallback, copy URL to clipboard and show alert
       try {
-        await navigator.clipboard.writeText(postUrl);
-        alert(`URL copiada al portapapeles: ${postUrl}\n\nPuedes compartirlo en:\n- Twitter: ${shareOptions[0].url}\n- Facebook: ${shareOptions[1].url}\n- WhatsApp: ${shareOptions[2].url}`);
+        await navigator.clipboard.writeText(clipboardUrl);
+        alert(`URL copiada al portapapeles: ${clipboardUrl}\n\nPuedes compartirlo en:\n- Twitter: ${shareOptions[0].url}\n- Facebook: ${shareOptions[1].url}\n- WhatsApp: ${shareOptions[2].url}`);
+
+        // Track share event in Google Analytics
+        if (window.gtag) {
+          window.gtag('event', 'share', {
+            method: 'clipboard',
+            content_type: 'post',
+            content_id: post.id.toString(),
+            ianfluencer_username: iAnfluencer.username,
+          });
+        }
+
         logger.info('Post compartido - URL copiada al portapapeles');
       } catch (error) {
         // If clipboard API fails, just log the URLs
         logger.debug('Opciones de compartir:', shareOptions);
-        alert(`Comparte este post en:\n${postUrl}`);
+        alert(`Comparte este post en:\n${clipboardUrl}`);
       }
     }
   };
