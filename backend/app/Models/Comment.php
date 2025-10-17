@@ -14,7 +14,8 @@ class Comment extends Model
         'i_anfluencer_id',
         'content',
         'is_ai_generated',
-        'ai_generation_params'
+        'ai_generation_params',
+        'likes_count'
     ];
 
     protected $casts = [
