@@ -209,6 +209,14 @@ class ApiService {
     return response.data;
   }
 
+  // Track share
+  async trackShare(postId: string): Promise<{ shares_count: number }> {
+    const response = await this.fetchJson<ApiResponse<{ shares_count: number }>>(`/posts/${postId}/share`, {
+      method: 'POST'
+    });
+    return response.data;
+  }
+
   // Like/Unlike comments (future implementation)
   async likeComment(commentId: string): Promise<void> {
     await this.fetchJson(`/comments/${commentId}/like`, {

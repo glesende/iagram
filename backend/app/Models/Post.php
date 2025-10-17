@@ -17,6 +17,7 @@ class Post extends Model
         'ai_generation_params',
         'likes_count',
         'comments_count',
+        'shares_count',
         'is_ai_generated',
         'published_at'
     ];

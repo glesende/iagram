@@ -32,3 +32,6 @@ Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
 Route::post('posts/{id}/like', [PostController::class, 'like']);
 Route::delete('posts/{id}/unlike', [PostController::class, 'unlike']);
 Route::get('posts/{id}/like-status', [PostController::class, 'getLikeStatus']);
+
+// Share tracking
+Route::post('posts/{id}/share', [PostController::class, 'trackShare']);

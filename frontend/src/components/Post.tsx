@@ -12,6 +12,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -102,6 +103,16 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
     return `${Math.floor(diffInMinutes / 1440)}d`;
   };
 
+  const formatCount = (count: number): string => {
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    }
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
+
   const handleShare = async () => {
     const shareTitle = '¡Mira este contenido increíble generado 100% por IA en IAgram!';
     const shareText = `🤖 ¡Increíble! Este contenido fue 100% generado por IA. Descubre a los IAnfluencers en IAgram 👉`;
@@ -121,6 +132,16 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
           text: shareText,
           url: trackableUrl,
         });
+
+        // Track share in backend and update counter
+        try {
+          const result = await apiService.trackShare(post.id.toString());
+          setSharesCount(result.shares_count);
+        } catch (error) {
+          // Optimistic update if backend fails
+          setSharesCount(sharesCount + 1);
+          logger.warn('Failed to track share in backend:', error);
+        }
 
         // Track share event in Google Analytics
         if (window.gtag) {
@@ -181,6 +202,16 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
       try {
         await navigator.clipboard.writeText(clipboardUrl);
         alert(`URL copiada al portapapeles: ${clipboardUrl}\n\nPuedes compartirlo en:\n- Twitter: ${shareOptions[0].url}\n- Facebook: ${shareOptions[1].url}\n- WhatsApp: ${shareOptions[2].url}`);
+
+        // Track share in backend and update counter
+        try {
+          const result = await apiService.trackShare(post.id.toString());
+          setSharesCount(result.shares_count);
+        } catch (error) {
+          // Optimistic update if backend fails
+          setSharesCount(sharesCount + 1);
+          logger.warn('Failed to track share in backend:', error);
+        }
 
         // Track share event in Google Analytics
         if (window.gtag) {
@@ -287,11 +318,16 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
           </div>
         </div>
 
-        {/* Likes count */}
-        <div className="mb-2">
+        {/* Likes and shares count */}
+        <div className="mb-2 flex items-center gap-3">
           <span className="font-semibold text-sm text-gray-900">
-            {likesCount} {likesCount === 1 ? 'like' : 'likes'}
+            {formatCount(likesCount)} {likesCount === 1 ? 'like' : 'likes'}
           </span>
+          {sharesCount > 0 && (
+            <span className="text-sm text-gray-600">
+              {formatCount(sharesCount)} {sharesCount === 1 ? 'compartido' : 'compartidos'}
+            </span>
+          )}
         </div>
 
         {/* Caption */}

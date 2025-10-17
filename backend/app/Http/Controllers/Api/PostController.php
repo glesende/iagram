@@ -337,4 +337,36 @@ class PostController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Track a post share.
+     */
+    public function trackShare(string $id): JsonResponse
+    {
+        try {
+            $post = Post::findOrFail($id);
+
+            // Increment the shares count
+            $post->increment('shares_count');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'shares_count' => $post->fresh()->shares_count
+                ],
+                'message' => 'Share registrado exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar share',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
