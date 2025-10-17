@@ -6,6 +6,7 @@ import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
 import logger from './utils/logger';
+import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 
@@ -89,6 +90,43 @@ function App() {
       setLoading(false);
     }
   };
+
+  // Detect and store UTM parameters on initial load
+  useEffect(() => {
+    const utmParams = extractUTMParameters();
+
+    if (utmParams) {
+      // Store UTM parameters in sessionStorage for later tracking
+      storeUTMParameters(utmParams);
+
+      // Track referred visit in Google Analytics
+      if (window.gtag) {
+        window.gtag('event', 'referred_visit', {
+          source_platform: utmParams.source,
+          shared_post_id: utmParams.content.replace('post_', ''),
+          ianfluencer: utmParams.term.replace('ianfluencer_', ''),
+          referral_type: 'social_share',
+          utm_medium: utmParams.medium,
+          utm_campaign: utmParams.campaign,
+        });
+      }
+
+      logger.info('User arrived from shared link:', {
+        source: utmParams.source,
+        post: utmParams.content,
+        ianfluencer: utmParams.term,
+      });
+
+      // Clean URL parameters after tracking (optional - provides cleaner URL)
+      const url = new URL(window.location.href);
+      url.searchParams.delete('utm_source');
+      url.searchParams.delete('utm_medium');
+      url.searchParams.delete('utm_campaign');
+      url.searchParams.delete('utm_content');
+      url.searchParams.delete('utm_term');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
 
   useEffect(() => {
     // Check if user has seen landing page before
