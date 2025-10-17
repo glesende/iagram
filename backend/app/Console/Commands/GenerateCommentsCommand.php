@@ -29,17 +29,32 @@ class GenerateCommentsCommand extends Command
 
     public function handle(): int
     {
+        $startTime = microtime(true);
         $maxCommentsPerPost = (int) $this->option('max-per-post');
         $maxExistingComments = (int) $this->option('max-comments');
         $hoursAgo = (int) $this->option('hours');
 
         $this->info('💬 Starting automatic comment generation for IAnfluencers...');
 
+        Log::channel('scheduled_commands')->info('Started iagram:generate-comments execution', [
+            'command' => 'iagram:generate-comments',
+            'max_comments_per_post' => $maxCommentsPerPost,
+            'max_existing_comments' => $maxExistingComments,
+            'hours_ago' => $hoursAgo,
+            'timestamp' => now()->toISOString()
+        ]);
+
         // Get active IAnfluencers
         $activeInfluencers = IAnfluencer::where('is_active', true)->get();
 
         if ($activeInfluencers->isEmpty()) {
             $this->warn('No active IAnfluencers found. Please run the seeders first.');
+
+            Log::channel('scheduled_commands')->warning('No active IAnfluencers found', [
+                'command' => 'iagram:generate-comments',
+                'timestamp' => now()->toISOString()
+            ]);
+
             return self::FAILURE;
         }
 
@@ -59,6 +74,8 @@ class GenerateCommentsCommand extends Command
         $this->info("Found {$recentPosts->count()} posts that could use more comments.");
 
         $totalCommentsGenerated = 0;
+        $followRelationshipsEstablished = 0;
+        $errorsCount = 0;
 
         foreach ($recentPosts as $post) {
             try {
@@ -85,25 +102,42 @@ class GenerateCommentsCommand extends Command
                         continue;
                     }
 
-                    $commentsGenerated = $this->generateCommentForPost($post, $postAuthor, $commenter);
-                    $totalCommentsGenerated += $commentsGenerated;
+                    $result = $this->generateCommentForPost($post, $postAuthor, $commenter);
+                    $totalCommentsGenerated += $result['comments_generated'];
+                    $followRelationshipsEstablished += $result['follow_relationship_established'];
 
                     // Small delay to avoid overwhelming the API
-                    if ($commentsGenerated > 0) {
+                    if ($result['comments_generated'] > 0) {
                         sleep(1);
                     }
                 }
 
             } catch (\Exception $e) {
+                $errorsCount++;
                 $this->error("  ❌ Error generating comments for post {$post->id}: " . $e->getMessage());
-                Log::error("Error generating comments for post {$post->id}", [
+
+                Log::channel('scheduled_commands')->error("Error generating comments for post {$post->id}", [
+                    'command' => 'iagram:generate-comments',
+                    'post_id' => $post->id,
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
             }
         }
 
+        $executionTime = round(microtime(true) - $startTime, 2);
+
         $this->info("🎉 Generation completed! Total comments created: {$totalCommentsGenerated}");
+
+        Log::channel('scheduled_commands')->info('Comments generation completed', [
+            'command' => 'iagram:generate-comments',
+            'comments_generated' => $totalCommentsGenerated,
+            'follow_relationships_established' => $followRelationshipsEstablished,
+            'posts_processed' => $recentPosts->count(),
+            'execution_time_seconds' => $executionTime,
+            'errors' => $errorsCount,
+            'timestamp' => now()->toISOString()
+        ]);
 
         return self::SUCCESS;
     }
@@ -130,7 +164,7 @@ class GenerateCommentsCommand extends Command
             ->exists();
     }
 
-    private function generateCommentForPost(Post $post, IAnfluencer $postAuthor, IAnfluencer $commenter): int
+    private function generateCommentForPost(Post $post, IAnfluencer $postAuthor, IAnfluencer $commenter): array
     {
         try {
             // Build context for comment generation
@@ -148,7 +182,7 @@ class GenerateCommentsCommand extends Command
 
             if (empty($commentContent)) {
                 $this->warn("  ⚠️ Generated empty comment for @{$commenter->username}, skipping...");
-                return 0;
+                return ['comments_generated' => 0, 'follow_relationship_established' => 0];
             }
 
             // Check if this is the first interaction between these IAnfluencers
@@ -170,18 +204,21 @@ class GenerateCommentsCommand extends Command
             // Update the comments count on the post
             $post->increment('comments_count');
 
+            $followEstablished = 0;
+
             // If this is the first interaction, establish a follow relationship
             if ($isFirstInteraction) {
                 $this->establishFollowRelationship($commenter, $postAuthor);
+                $followEstablished = 1;
             }
 
             $this->info("  ✅ @{$commenter->username} commented on @{$postAuthor->username}'s post");
 
-            return 1;
+            return ['comments_generated' => 1, 'follow_relationship_established' => $followEstablished];
 
         } catch (\Exception $e) {
             $this->warn("  ⚠️ Failed to generate comment from @{$commenter->username}: " . $e->getMessage());
-            return 0;
+            return ['comments_generated' => 0, 'follow_relationship_established' => 0];
         }
     }
 
