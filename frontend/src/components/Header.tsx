@@ -4,9 +4,10 @@ interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
   searchTerm?: string;
   onClearSearch?: () => void;
+  onShowLanding?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch, onShowLanding }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Sync internal state with external searchTerm prop
@@ -35,12 +36,35 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
     onSearch?.(searchTerm);
   };
 
+  const handleLandingClick = () => {
+    // Track "What is IAgram" button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'what_is_iagram_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Button',
+      });
+    }
+    onShowLanding?.();
+  };
+
   return (
     <header className="bg-white border-b border-gray-300 sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <h1 className="text-2xl font-bold text-gray-900">IAgram</h1>
+            {onShowLanding && (
+              <button
+                onClick={handleLandingClick}
+                className="hidden sm:flex items-center text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                aria-label="¿Qué es IAgram?"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                ¿Qué es IAgram?
+              </button>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
