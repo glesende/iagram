@@ -84,6 +84,14 @@ class ApiService {
     return mapBackendIAnfluencer(response.data);
   }
 
+  async getIAnfluencerByUsername(username: string): Promise<IAnfluencer> {
+    const response = await this.fetchJson<ApiResponse<BackendIAnfluencer>>(`/ianfluencers/username/${username}`);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch IAnfluencer');
+    }
+    return mapBackendIAnfluencer(response.data);
+  }
+
   // Posts API methods
   async getPosts(): Promise<Post[]> {
     const response = await this.fetchJson<PaginatedApiResponse<BackendPost>>('/posts');
@@ -103,6 +111,14 @@ class ApiService {
 
   async getPostsByIAnfluencer(iAnfluencerId: string): Promise<Post[]> {
     const response = await this.fetchJson<PaginatedApiResponse<BackendPost>>(`/ianfluencers/${iAnfluencerId}/posts`);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch Posts by IAnfluencer');
+    }
+    return response.data.data.map(mapBackendPost);
+  }
+
+  async getPostsByIAnfluencerUsername(username: string): Promise<Post[]> {
+    const response = await this.fetchJson<PaginatedApiResponse<BackendPost>>(`/posts/influencer/${username}`);
     if (!response.success) {
       throw new Error(response.error || 'Failed to fetch Posts by IAnfluencer');
     }

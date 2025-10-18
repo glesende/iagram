@@ -85,6 +85,53 @@ class IAnfluencerController extends Controller
     }
 
     /**
+     * Get IAnfluencer by username with posts count.
+     */
+    public function showByUsername(string $username): JsonResponse
+    {
+        try {
+            $ianfluencer = IAnfluencer::where('username', $username)
+                ->firstOrFail();
+
+            // Get posts count
+            $postsCount = $ianfluencer->posts()->count();
+
+            // Format response
+            $data = [
+                'id' => $ianfluencer->id,
+                'username' => $ianfluencer->username,
+                'display_name' => $ianfluencer->display_name,
+                'bio' => $ianfluencer->bio,
+                'avatar_url' => $ianfluencer->avatar_url,
+                'personality_traits' => $ianfluencer->personality_traits,
+                'interests' => $ianfluencer->interests,
+                'niche' => $ianfluencer->niche,
+                'followers_count' => $ianfluencer->followers_count,
+                'following_count' => $ianfluencer->following_count,
+                'posts_count' => $postsCount,
+                'is_active' => $ianfluencer->is_active,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'message' => 'IAnfluencer obtenido exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'IAnfluencer no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener el IAnfluencer',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(UpdateIAnfluencerRequest $request, string $id): JsonResponse

@@ -7,6 +7,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\Like;
+use App\Models\IAnfluencer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -167,6 +168,38 @@ class PostController extends Controller
                 'data' => $posts,
                 'message' => 'Posts del IAnfluencer obtenidos exitosamente'
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los posts del IAnfluencer',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get posts by IAnfluencer username.
+     */
+    public function getByIAnfluencerUsername(string $username): JsonResponse
+    {
+        try {
+            $ianfluencer = IAnfluencer::where('username', $username)->firstOrFail();
+
+            $posts = Post::with(['comments.iAnfluencer'])
+                ->where('i_anfluencer_id', $ianfluencer->id)
+                ->orderBy('published_at', 'desc')
+                ->paginate(20);
+
+            return response()->json([
+                'success' => true,
+                'data' => $posts,
+                'message' => 'Posts del IAnfluencer obtenidos exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'IAnfluencer no encontrado'
+            ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

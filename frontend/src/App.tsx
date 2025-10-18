@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Feed from './components/Feed';
 import LandingPage from './components/LandingPage';
+import IAnfluencerProfile from './components/IAnfluencerProfile';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -10,13 +11,16 @@ import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 
+type View = 'landing' | 'feed' | 'profile';
+
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [filteredFeedItems, setFilteredFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showLanding, setShowLanding] = useState(false);
+  const [currentView, setCurrentView] = useState<View>('feed');
+  const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -31,7 +35,7 @@ function App() {
   const handleExploreFeed = () => {
     // Mark landing as seen and navigate to feed
     localStorage.setItem(LANDING_SEEN_KEY, 'true');
-    setShowLanding(false);
+    setCurrentView('feed');
 
     // Track landing to feed conversion in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -43,7 +47,25 @@ function App() {
   };
 
   const handleShowLanding = () => {
-    setShowLanding(true);
+    setCurrentView('landing');
+  };
+
+  const handleProfileClick = (username: string) => {
+    setSelectedUsername(username);
+    setCurrentView('profile');
+
+    // Track profile navigation in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'navigate_to_profile', {
+        ianfluencer_username: username,
+        event_category: 'Navigation',
+      });
+    }
+  };
+
+  const handleBackToFeed = () => {
+    setCurrentView('feed');
+    setSelectedUsername(null);
   };
 
   const filterFeedItems = (items: FeedItem[], term: string) => {
@@ -132,7 +154,7 @@ function App() {
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
-      setShowLanding(true);
+      setCurrentView('landing');
     }
     fetchFeedData();
   }, []);
@@ -143,7 +165,7 @@ function App() {
   }, [feedItems, searchTerm]);
 
   // Show landing page if this is first visit
-  if (showLanding) {
+  if (currentView === 'landing') {
     return (
       <Layout showHeader={false}>
         <LandingPage
@@ -154,6 +176,16 @@ function App() {
     );
   }
 
+  // Show profile view
+  if (currentView === 'profile' && selectedUsername) {
+    return (
+      <Layout showHeader={false}>
+        <IAnfluencerProfile username={selectedUsername} onBack={handleBackToFeed} />
+      </Layout>
+    );
+  }
+
+  // Show feed view
   if (loading) {
     return (
       <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding}>
@@ -175,7 +207,12 @@ function App() {
           </div>
         </div>
       )}
-      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} onClearSearch={handleClearSearch} />
+      <Feed
+        feedItems={filteredFeedItems}
+        onRefresh={fetchFeedData}
+        onClearSearch={handleClearSearch}
+        onProfileClick={handleProfileClick}
+      />
     </Layout>
   );
 }

@@ -12,6 +12,7 @@ export interface BackendIAnfluencer {
   niche: string;
   followers_count: number;
   following_count: number;
+  posts_count?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -61,7 +62,10 @@ export function mapBackendIAnfluencer(backend: BackendIAnfluencer): IAnfluencer 
     characteristics: backend.interests || [],
     followerCount: backend.followers_count || 0,
     followingCount: backend.following_count || 0,
-    postCount: backend.posts?.length || 0
+    postCount: backend.posts_count ?? backend.posts?.length ?? 0,
+    personalityTraits: backend.personality_traits || [],
+    interests: backend.interests || [],
+    niche: backend.niche || ''
   };
 }
 
