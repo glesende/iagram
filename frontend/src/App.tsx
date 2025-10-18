@@ -14,9 +14,12 @@ function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [filteredFeedItems, setFilteredFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showLanding, setShowLanding] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -60,17 +63,24 @@ function App() {
     setFilteredFeedItems(filtered);
   };
 
-  const fetchFeedData = async () => {
+  const fetchFeedData = async (resetPage: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Try to fetch real data from API
-      const realFeedItems = await apiService.getFeedItems();
+      if (resetPage) {
+        setCurrentPage(1);
+        setHasMorePosts(true);
+      }
 
-      if (realFeedItems.length > 0) {
-        setFeedItems(realFeedItems);
-        setFilteredFeedItems(realFeedItems);
+      // Try to fetch real data from API
+      const feedData = await apiService.getFeedItems(1);
+
+      if (feedData.items.length > 0) {
+        setFeedItems(feedData.items);
+        setFilteredFeedItems(feedData.items);
+        setHasMorePosts(feedData.hasMore);
+        setCurrentPage(feedData.currentPage);
         logger.log('✅ Using real API data');
       } else {
         // Fallback to mock data if no real data available
@@ -78,6 +88,7 @@ function App() {
         const mockData = getMockFeedItems();
         setFeedItems(mockData);
         setFilteredFeedItems(mockData);
+        setHasMorePosts(false);
       }
     } catch (err) {
       // Fallback to mock data if API fails
@@ -86,8 +97,39 @@ function App() {
       const mockData = getMockFeedItems();
       setFeedItems(mockData);
       setFilteredFeedItems(mockData);
+      setHasMorePosts(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMorePosts || searchTerm) {
+      return;
+    }
+
+    try {
+      setLoadingMore(true);
+      const nextPage = currentPage + 1;
+
+      const feedData = await apiService.getFeedItems(nextPage);
+
+      if (feedData.items.length > 0) {
+        const newFeedItems = [...feedItems, ...feedData.items];
+        setFeedItems(newFeedItems);
+        setFilteredFeedItems(newFeedItems);
+        setCurrentPage(feedData.currentPage);
+        setHasMorePosts(feedData.hasMore);
+        logger.log(`✅ Loaded page ${nextPage} (${feedData.items.length} posts)`);
+      } else {
+        setHasMorePosts(false);
+        logger.log('📍 Reached end of feed');
+      }
+    } catch (err) {
+      logger.error('❌ Error loading more posts:', err);
+      setHasMorePosts(false);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -175,7 +217,14 @@ function App() {
           </div>
         </div>
       )}
-      <Feed feedItems={filteredFeedItems} onRefresh={fetchFeedData} onClearSearch={handleClearSearch} />
+      <Feed
+        feedItems={filteredFeedItems}
+        onRefresh={fetchFeedData}
+        onClearSearch={handleClearSearch}
+        onLoadMore={loadMorePosts}
+        loadingMore={loadingMore}
+        hasMorePosts={hasMorePosts}
+      />
     </Layout>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Post from './Post';
 import { FeedItem } from '../types';
 
@@ -6,9 +6,20 @@ interface FeedProps {
   feedItems: FeedItem[];
   onRefresh?: () => void;
   onClearSearch?: () => void;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  hasMorePosts?: boolean;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
+const Feed: React.FC<FeedProps> = ({
+  feedItems,
+  onRefresh,
+  onClearSearch,
+  onLoadMore,
+  loadingMore = false,
+  hasMorePosts = true
+}) => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const handleExploreClick = () => {
     // Track click_explore_button event in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -21,6 +32,37 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
     onClearSearch?.();
     onRefresh?.();
   };
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!onLoadMore || !hasMorePosts || loadingMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px'
+      }
+    );
+
+    const sentinel = sentinelRef.current;
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [onLoadMore, hasMorePosts, loadingMore]);
+
   return (
     <div className="max-w-md mx-auto py-6">
       {feedItems.length === 0 ? (
@@ -104,9 +146,38 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
           </div>
         </div>
       ) : (
-        feedItems.map((feedItem) => (
-          <Post key={feedItem.post.id} feedItem={feedItem} />
-        ))
+        <>
+          {feedItems.map((feedItem) => (
+            <Post key={feedItem.post.id} feedItem={feedItem} />
+          ))}
+
+          {/* Sentinel element for infinite scroll */}
+          {onLoadMore && (
+            <div ref={sentinelRef} className="h-4 mx-4 my-8">
+              {loadingMore && (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="flex items-center space-x-2 text-gray-500">
+                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span className="text-sm">Cargando más posts...</span>
+                  </div>
+                </div>
+              )}
+
+              {!hasMorePosts && !loadingMore && feedItems.length > 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-sm">
+                    <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Has visto todos los posts
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

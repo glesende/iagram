@@ -135,11 +135,25 @@ class ApiService {
   }
 
   // Feed API method - combines posts with their related data
-  async getFeedItems(): Promise<FeedItem[]> {
+  async getFeedItems(page: number = 1): Promise<{
+    items: FeedItem[];
+    hasMore: boolean;
+    currentPage: number;
+    lastPage: number;
+  }> {
     try {
-      // Fetch all data in parallel
-      const [posts, iAnfluencers, comments] = await Promise.all([
-        this.getPosts(),
+      // Fetch posts with pagination
+      const postsResponse = await this.fetchJson<PaginatedApiResponse<BackendPost>>(`/posts?page=${page}`);
+
+      if (!postsResponse.success) {
+        throw new Error(postsResponse.error || 'Failed to fetch Posts');
+      }
+
+      const posts = postsResponse.data.data.map(mapBackendPost);
+      const { current_page, last_page } = postsResponse.data.meta;
+
+      // Fetch iAnfluencers and comments in parallel
+      const [iAnfluencers, comments] = await Promise.all([
         this.getIAnfluencers(),
         this.getComments()
       ]);
@@ -165,7 +179,7 @@ class ApiService {
       });
 
       // Build feed items
-      return posts.map(post => {
+      const items = posts.map(post => {
         const iAnfluencer = iAnfluencersMap.get(post.iAnfluencerId);
         const postComments = commentsByPostMap.get(post.id) || [];
 
@@ -180,6 +194,13 @@ class ApiService {
           comments: postComments
         };
       }).filter((item): item is FeedItem => item !== null);
+
+      return {
+        items,
+        hasMore: current_page < last_page,
+        currentPage: current_page,
+        lastPage: last_page
+      };
 
     } catch (error) {
       logger.error('Error fetching feed items:', error);
