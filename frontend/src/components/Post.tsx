@@ -246,7 +246,7 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleLike}
-              className={`focus:outline-none ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`focus:outline-none relative ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-label="Me gusta"
               aria-pressed={isLiked}
               disabled={isLoading}
@@ -260,6 +260,11 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </button>
             <button onClick={() => {
               const newShowComments = !showComments;
