@@ -50,6 +50,11 @@ class IAnfluencerSeeder extends Seeder
         ];
 
         foreach ($ianfluencers as $ianfluencer) {
+            // Establecer created_at retroactivo (90-180 días) para consistencia temporal
+            // Esto asegura que los IAnfluencers existían ANTES de publicar sus posts
+            $ianfluencer['created_at'] = now()->subDays(rand(90, 180));
+            $ianfluencer['updated_at'] = now()->subDays(rand(1, 30));
+
             IAnfluencer::create($ianfluencer);
         }
     }
