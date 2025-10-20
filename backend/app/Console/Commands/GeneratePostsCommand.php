@@ -33,10 +33,18 @@ class GeneratePostsCommand extends Command
 
     public function handle(): int
     {
+        $startTime = microtime(true);
         $maxPostsPerInfluencer = (int) $this->option('count');
         $skipImages = $this->option('skip-images');
 
         $this->info('🤖 Starting automatic post generation for IAnfluencers...');
+
+        Log::channel('scheduled_commands')->info('Started iagram:generate-posts execution', [
+            'command' => 'iagram:generate-posts',
+            'max_posts_per_influencer' => $maxPostsPerInfluencer,
+            'skip_images' => $skipImages,
+            'timestamp' => now()->toISOString()
+        ]);
 
         if ($skipImages) {
             $this->warn('⚠️  Image generation is DISABLED. Posts will be created without images.');
@@ -51,10 +59,17 @@ class GeneratePostsCommand extends Command
 
         if ($activeInfluencers->isEmpty()) {
             $this->warn('No active IAnfluencers found. Please run the seeders first.');
+
+            Log::channel('scheduled_commands')->warning('No active IAnfluencers found', [
+                'command' => 'iagram:generate-posts',
+                'timestamp' => now()->toISOString()
+            ]);
+
             return self::FAILURE;
         }
 
         $totalPostsGenerated = 0;
+        $errorsCount = 0;
 
         foreach ($activeInfluencers as $influencer) {
             $this->line("Generating posts for @{$influencer->username}...");
@@ -67,19 +82,37 @@ class GeneratePostsCommand extends Command
                 $this->info("  ✅ Generated {$postsGenerated} posts for @{$influencer->username}");
 
             } catch (\Exception $e) {
+                $errorsCount++;
                 $this->error("  ❌ Error generating posts for @{$influencer->username}: " . $e->getMessage());
-                Log::error("Error generating posts for IAnfluencer {$influencer->id}", [
+
+                Log::channel('scheduled_commands')->error("Error generating posts for IAnfluencer {$influencer->id}", [
+                    'command' => 'iagram:generate-posts',
+                    'influencer_id' => $influencer->id,
+                    'influencer_username' => $influencer->username,
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
             }
         }
 
+        $executionTime = round(microtime(true) - $startTime, 2);
+
         $this->info("🎉 Generation completed! Total posts created: {$totalPostsGenerated}");
 
         if (!$skipImages) {
             $this->info("📸 Total images generated: {$this->imagesGenerated}");
         }
+
+        Log::channel('scheduled_commands')->info('Posts generation completed', [
+            'command' => 'iagram:generate-posts',
+            'posts_generated' => $totalPostsGenerated,
+            'images_generated' => $this->imagesGenerated,
+            'execution_time_seconds' => $executionTime,
+            'influencers_processed' => $activeInfluencers->count(),
+            'errors' => $errorsCount,
+            'skip_images' => $skipImages,
+            'timestamp' => now()->toISOString()
+        ]);
 
         return self::SUCCESS;
     }
