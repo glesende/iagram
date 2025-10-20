@@ -6,9 +6,10 @@ interface FeedProps {
   feedItems: FeedItem[];
   onRefresh?: () => void;
   onClearSearch?: () => void;
+  onProfileClick?: (username: string) => void;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick }) => {
   const handleExploreClick = () => {
     // Track click_explore_button event in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -105,7 +106,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch }) => {
         </div>
       ) : (
         feedItems.map((feedItem) => (
-          <Post key={feedItem.post.id} feedItem={feedItem} />
+          <Post key={feedItem.post.id} feedItem={feedItem} onProfileClick={onProfileClick} />
         ))
       )}
     </div>

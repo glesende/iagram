@@ -10,6 +10,9 @@ export interface IAnfluencer {
   followerCount: number;
   followingCount: number;
   postCount: number;
+  personalityTraits: string[];
+  interests: string[];
+  niche: string;
 }
 
 export interface Post {

@@ -6,9 +6,10 @@ import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/shar
 
 interface PostProps {
   feedItem: FeedItem;
+  onProfileClick?: (username: string) => void;
 }
 
-const Post: React.FC<PostProps> = ({ feedItem }) => {
+const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -205,16 +206,25 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
     <article className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center p-4">
-        <img
-          src={iAnfluencer.profileImage}
-          alt={iAnfluencer.displayName}
-          className="w-8 h-8 rounded-full object-cover"
-        />
+        <button
+          onClick={() => onProfileClick?.(iAnfluencer.username)}
+          className="flex items-center focus:outline-none"
+          aria-label={`Ver perfil de ${iAnfluencer.username}`}
+        >
+          <img
+            src={iAnfluencer.profileImage}
+            alt={iAnfluencer.displayName}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        </button>
         <div className="ml-3 flex-1">
           <div className="flex items-center">
-            <span className="font-semibold text-sm text-gray-900">
+            <button
+              onClick={() => onProfileClick?.(iAnfluencer.username)}
+              className="font-semibold text-sm text-gray-900 hover:text-gray-600 focus:outline-none"
+            >
               {iAnfluencer.username}
-            </span>
+            </button>
             {iAnfluencer.isVerified && (
               <svg className="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <title>Verificado</title>
@@ -301,9 +311,12 @@ const Post: React.FC<PostProps> = ({ feedItem }) => {
 
         {/* Caption */}
         <div className="mb-2">
-          <span className="font-semibold text-sm text-gray-900 mr-2">
+          <button
+            onClick={() => onProfileClick?.(iAnfluencer.username)}
+            className="font-semibold text-sm text-gray-900 hover:text-gray-600 mr-2 focus:outline-none"
+          >
             {iAnfluencer.username}
-          </span>
+          </button>
           <span className="text-sm text-gray-900">{post.content}</span>
         </div>
 

@@ -11,6 +11,9 @@ const mockIAnfluencers: IAnfluencer[] = [
     isVerified: true,
     personality: 'Apasionada por la cocina, creativa y siempre experimentando',
     characteristics: ['cocina', 'creatividad', 'innovación'],
+    personalityTraits: ['Creativa', 'Apasionada', 'Innovadora'],
+    interests: ['cocina gourmet', 'recetas fusion', 'ingredientes exóticos'],
+    niche: 'Cocina & Gastronomía',
     followerCount: 15420,
     followingCount: 890,
     postCount: 156
@@ -24,6 +27,9 @@ const mockIAnfluencers: IAnfluencer[] = [
     isVerified: true,
     personality: 'Visionario tecnológico, analítico y futurista',
     characteristics: ['tecnología', 'innovación', 'futuro'],
+    personalityTraits: ['Analítico', 'Visionario', 'Curioso'],
+    interests: ['IA', 'blockchain', 'realidad virtual', 'startups'],
+    niche: 'Tecnología & Innovación',
     followerCount: 28750,
     followingCount: 1200,
     postCount: 89
@@ -37,6 +43,9 @@ const mockIAnfluencers: IAnfluencer[] = [
     isVerified: false,
     personality: 'Tranquila, reflexiva y en armonía con la naturaleza',
     characteristics: ['naturaleza', 'meditación', 'bienestar'],
+    personalityTraits: ['Tranquila', 'Reflexiva', 'Consciente'],
+    interests: ['yoga', 'meditación', 'hiking', 'vida sostenible'],
+    niche: 'Bienestar & Naturaleza',
     followerCount: 8900,
     followingCount: 456,
     postCount: 203

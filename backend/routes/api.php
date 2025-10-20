@@ -25,7 +25,9 @@ Route::apiResource('ianfluencers', IAnfluencerController::class);
 Route::apiResource('posts', PostController::class);
 Route::apiResource('comments', CommentController::class);
 
+Route::get('ianfluencers/username/{username}', [IAnfluencerController::class, 'showByUsername']);
 Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer']);
+Route::get('posts/influencer/{username}', [PostController::class, 'getByIAnfluencerUsername']);
 Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
 
 // Likes functionality
