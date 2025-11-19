@@ -18,6 +18,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, samplePosts }) => 
     onExplore();
   };
 
+  const handleCreateAccountClick = () => {
+    // Track create account intent in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'create_account_intent', {
+        event_category: 'Conversion',
+        event_label: 'Create Account CTA - Hero',
+      });
+    }
+    // TODO: Redirect to signup when implemented (task #346)
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-blue-50">
       {/* Hero Section */}
@@ -57,6 +68,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, samplePosts }) => 
               Explorar IAnfluencers
             </button>
             <button
+              onClick={handleCreateAccountClick}
               className="bg-white hover:bg-gray-50 text-gray-700 font-semibold text-lg py-4 px-10 rounded-full border-2 border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg"
               aria-label="Crear cuenta"
             >

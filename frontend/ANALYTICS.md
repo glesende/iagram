@@ -141,6 +141,37 @@ docker-compose restart frontend
   });
   ```
 
+#### landing_explore_click
+- **Descripción**: Usuario hace clic en los botones "Explorar IAnfluencers" o "Comenzar Ahora" en la landing page
+- **Ubicación**: `LandingPage.tsx` (líneas 10-19, usado en líneas 51 y 176)
+- **Parámetros**:
+  - `event_category`: "Landing Page"
+  - `event_label`: "Explore IAnfluencers CTA"
+- **Ejemplo**:
+  ```javascript
+  gtag('event', 'landing_explore_click', {
+    event_category: 'Landing Page',
+    event_label: 'Explore IAnfluencers CTA'
+  });
+  ```
+
+### Eventos de Conversión
+
+#### create_account_intent
+- **Descripción**: Usuario hace clic en el botón "Crear Cuenta" en la hero section de la landing page (trackea intención de registro)
+- **Ubicación**: `LandingPage.tsx` (líneas 21-30)
+- **Parámetros**:
+  - `event_category`: "Conversion"
+  - `event_label`: "Create Account CTA - Hero"
+- **Ejemplo**:
+  ```javascript
+  gtag('event', 'create_account_intent', {
+    event_category: 'Conversion',
+    event_label: 'Create Account CTA - Hero'
+  });
+  ```
+- **Nota**: Este evento trackea la intención de registro antes de que la funcionalidad de autenticación esté implementada (tarea #346). Permite medir demanda y calcular signup intent rate.
+
 ## Análisis Recomendados
 
 ### KPIs Clave
@@ -160,6 +191,12 @@ docker-compose restart frontend
 4. **Performance**:
    - Web Vitals (LCP, FID, CLS)
    - Correlación entre performance y engagement
+
+5. **Conversion Metrics**:
+   - **Signup Intent Rate**: `create_account_intent` / `landing_page_views`
+   - **Explore vs Signup Preference**: `landing_explore_click` / `create_account_intent`
+   - **Landing Page Conversion**: (`create_account_intent` + `landing_explore_click`) / `landing_page_views`
+   - Segmentación: usuarios con signup intent vs exploradores anónimos
 
 ### Dashboards Sugeridos
 
