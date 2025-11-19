@@ -5,9 +5,21 @@ interface HeaderProps {
   searchTerm?: string;
   onClearSearch?: () => void;
   onShowLanding?: () => void;
+  onShowRegister?: () => void;
+  authUser?: any;
+  onLogout?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch, onShowLanding }) => {
+const Header: React.FC<HeaderProps> = ({
+  onSearch,
+  searchTerm: externalSearchTerm,
+  onClearSearch,
+  onShowLanding,
+  onShowRegister,
+  authUser,
+  onLogout
+}) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Sync internal state with external searchTerm prop
@@ -45,6 +57,22 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
       });
     }
     onShowLanding?.();
+  };
+
+  const handleRegisterClick = () => {
+    // Track registration button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'header_register_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Register Button',
+      });
+    }
+    onShowRegister?.();
+  };
+
+  const handleLogoutClick = () => {
+    setShowUserMenu(false);
+    onLogout?.();
   };
 
   return (
@@ -86,11 +114,52 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Favoritos">
-              <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
+            {authUser ? (
+              // Authenticated user menu
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="User menu"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {authUser.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* User dropdown menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-sm font-semibold text-gray-900">{authUser.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{authUser.email}</p>
+                    </div>
+                    <button
+                      onClick={handleLogoutClick}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Not authenticated - show register button
+              onShowRegister && (
+                <button
+                  onClick={handleRegisterClick}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm"
+                >
+                  Crear Cuenta
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>

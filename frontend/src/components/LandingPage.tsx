@@ -3,10 +3,11 @@ import { FeedItem } from '../types';
 
 interface LandingPageProps {
   onExplore: () => void;
+  onRegister: () => void;
   samplePosts?: FeedItem[];
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onExplore, samplePosts }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, samplePosts }) => {
   const handleExploreClick = () => {
     // Track landing page CTA click in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -16,6 +17,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, samplePosts }) => 
       });
     }
     onExplore();
+  };
+
+  const handleRegisterClick = () => {
+    // Track registration CTA click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'landing_register_click', {
+        event_category: 'Landing Page',
+        event_label: 'Create Account CTA',
+      });
+    }
+    onRegister();
   };
 
   return (
@@ -57,6 +69,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, samplePosts }) => 
               Explorar IAnfluencers
             </button>
             <button
+              onClick={handleRegisterClick}
               className="bg-white hover:bg-gray-50 text-gray-700 font-semibold text-lg py-4 px-10 rounded-full border-2 border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg"
               aria-label="Crear cuenta"
             >

@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Feed from './components/Feed';
 import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
+import Register from './components/Register';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -10,8 +11,10 @@ import logger from './utils/logger';
 import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
+const AUTH_TOKEN_KEY = 'iagram_auth_token';
+const AUTH_USER_KEY = 'iagram_auth_user';
 
-type View = 'landing' | 'feed' | 'profile';
+type View = 'landing' | 'feed' | 'profile' | 'register';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -21,6 +24,9 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentView, setCurrentView] = useState<View>('feed');
   const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -66,6 +72,47 @@ function App() {
   const handleBackToFeed = () => {
     setCurrentView('feed');
     setSelectedUsername(null);
+  };
+
+  const handleShowRegister = () => {
+    setCurrentView('register');
+
+    // Track registration page view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_registration_form', {
+        event_category: 'Authentication',
+      });
+    }
+  };
+
+  const handleRegisterSuccess = (user: any, token: string) => {
+    // Store auth data
+    setAuthUser(user);
+    setAuthToken(token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+
+    // Navigate to feed
+    setCurrentView('feed');
+
+    logger.log('User registered successfully:', user.email);
+  };
+
+  const handleLogout = () => {
+    // Clear auth data
+    setAuthUser(null);
+    setAuthToken(null);
+    localStorage.removeItem(AUTH_USER_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+
+    // Track logout in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'logout', {
+        event_category: 'Authentication',
+      });
+    }
+
+    logger.log('User logged out');
   };
 
   const filterFeedItems = (items: FeedItem[], term: string) => {
@@ -151,6 +198,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Check for stored auth data
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    const storedUser = localStorage.getItem(AUTH_USER_KEY);
+    if (storedToken && storedUser) {
+      setAuthToken(storedToken);
+      setAuthUser(JSON.parse(storedUser));
+    }
+
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
@@ -170,7 +225,20 @@ function App() {
       <Layout showHeader={false}>
         <LandingPage
           onExplore={handleExploreFeed}
+          onRegister={handleShowRegister}
           samplePosts={loading ? undefined : feedItems.slice(0, 3)}
+        />
+      </Layout>
+    );
+  }
+
+  // Show registration page
+  if (currentView === 'register') {
+    return (
+      <Layout showHeader={false}>
+        <Register
+          onBack={handleShowLanding}
+          onRegisterSuccess={handleRegisterSuccess}
         />
       </Layout>
     );
@@ -188,7 +256,15 @@ function App() {
   // Show feed view
   if (loading) {
     return (
-      <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding}>
+      <Layout
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
+        onClearSearch={handleClearSearch}
+        onShowLanding={handleShowLanding}
+        onShowRegister={handleShowRegister}
+        authUser={authUser}
+        onLogout={handleLogout}
+      >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
         </div>
@@ -197,7 +273,15 @@ function App() {
   }
 
   return (
-    <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding}>
+    <Layout
+      onSearch={handleSearch}
+      searchTerm={searchTerm}
+      onClearSearch={handleClearSearch}
+      onShowLanding={handleShowLanding}
+      onShowRegister={handleShowRegister}
+      authUser={authUser}
+      onLogout={handleLogout}
+    >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
           <div className="flex">
