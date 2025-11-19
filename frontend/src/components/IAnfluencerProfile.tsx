@@ -13,6 +13,9 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -28,6 +31,15 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
 
         setIAnfluencer(profileData);
         setPosts(postsData);
+        setFollowerCount(profileData.followerCount);
+
+        // Load follow status from localStorage
+        // TODO: Replace localStorage with API call when backend ready
+        const followKey = `follows_${profileData.id}`;
+        const savedFollowStatus = localStorage.getItem(followKey);
+        if (savedFollowStatus !== null) {
+          setIsFollowing(savedFollowStatus === 'true');
+        }
 
         // Track profile view in Google Analytics
         if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -63,6 +75,46 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
       return `${(count / 1000).toFixed(1)}K`;
     }
     return count.toString();
+  };
+
+  const handleFollow = async () => {
+    if (isFollowLoading || !ianfluencer) return;
+
+    setIsFollowLoading(true);
+
+    // Optimistic update
+    const newIsFollowing = !isFollowing;
+    const newFollowerCount = newIsFollowing ? followerCount + 1 : followerCount - 1;
+
+    setIsFollowing(newIsFollowing);
+    setFollowerCount(newFollowerCount);
+
+    try {
+      // Save to localStorage
+      // TODO: Replace localStorage with API call when backend ready
+      const followKey = `follows_${ianfluencer.id}`;
+      localStorage.setItem(followKey, newIsFollowing.toString());
+
+      // Track follow/unfollow event in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        const eventName = newIsFollowing ? 'follow_ianfluencer' : 'unfollow_ianfluencer';
+        (window as any).gtag('event', eventName, {
+          ianfluencer_username: ianfluencer.username,
+          ianfluencer_id: ianfluencer.id,
+          niche: ianfluencer.niche,
+          event_category: 'Engagement',
+        });
+      }
+
+      logger.info(`${newIsFollowing ? 'Followed' : 'Unfollowed'} @${ianfluencer.username}`);
+    } catch (error) {
+      // Revert optimistic update on error
+      setIsFollowing(!newIsFollowing);
+      setFollowerCount(followerCount);
+      logger.error('Failed to update follow status:', error);
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
 
   if (loading) {
@@ -130,7 +182,7 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
                 <div className="text-sm text-gray-500">publicaciones</div>
               </div>
               <div>
-                <div className="font-semibold text-lg">{formatCount(ianfluencer.followerCount)}</div>
+                <div className="font-semibold text-lg">{formatCount(followerCount)}</div>
                 <div className="text-sm text-gray-500">seguidores</div>
               </div>
               <div>
@@ -140,6 +192,23 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
             </div>
           </div>
         </div>
+
+        {/* Follow Button */}
+        <button
+          onClick={handleFollow}
+          disabled={isFollowLoading}
+          className={`w-full mt-3 py-2 px-4 rounded-lg font-semibold transition-colors ${
+            isFollowLoading ? 'opacity-50 cursor-not-allowed' : ''
+          } ${
+            isFollowing
+              ? 'border-2 border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+          aria-label={isFollowing ? 'Dejar de seguir' : 'Seguir'}
+          aria-pressed={isFollowing}
+        >
+          {isFollowLoading ? 'Cargando...' : isFollowing ? 'Siguiendo' : 'Seguir'}
+        </button>
 
         {/* Display Name */}
         <div className="mb-1">
