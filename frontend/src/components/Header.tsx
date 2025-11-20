@@ -6,6 +6,7 @@ interface HeaderProps {
   onClearSearch?: () => void;
   onShowLanding?: () => void;
   onShowRegister?: () => void;
+  onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
 }
@@ -16,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({
   onClearSearch,
   onShowLanding,
   onShowRegister,
+  onShowLogin,
   authUser,
   onLogout
 }) => {
@@ -68,6 +70,17 @@ const Header: React.FC<HeaderProps> = ({
       });
     }
     onShowRegister?.();
+  };
+
+  const handleLoginClick = () => {
+    // Track login button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'header_login_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Login Button',
+      });
+    }
+    onShowLogin?.();
   };
 
   const handleLogoutClick = () => {
@@ -150,15 +163,25 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
             ) : (
-              // Not authenticated - show register button
-              onShowRegister && (
-                <button
-                  onClick={handleRegisterClick}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm"
-                >
-                  Crear Cuenta
-                </button>
-              )
+              // Not authenticated - show login and register buttons
+              <div className="flex items-center space-x-2">
+                {onShowLogin && (
+                  <button
+                    onClick={handleLoginClick}
+                    className="text-gray-700 hover:text-purple-600 font-semibold px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 text-sm"
+                  >
+                    Iniciar Sesión
+                  </button>
+                )}
+                {onShowRegister && (
+                  <button
+                    onClick={handleRegisterClick}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm"
+                  >
+                    Crear Cuenta
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
