@@ -15,6 +15,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Load like status from API on component mount
   useEffect(() => {
@@ -30,6 +31,20 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
     };
 
     loadLikeStatus();
+  }, [post.id]);
+
+  // Load saved status from localStorage on component mount
+  useEffect(() => {
+    const savedPosts = localStorage.getItem('saved_posts');
+    if (savedPosts) {
+      try {
+        const savedPostsArray = JSON.parse(savedPosts);
+        const isPostSaved = savedPostsArray.some((savedPost: any) => savedPost.postId === post.id);
+        setIsSaved(isPostSaved);
+      } catch (error) {
+        logger.warn('Failed to load saved status:', error);
+      }
+    }
   }, [post.id]);
 
   const handleLike = async () => {
@@ -90,6 +105,62 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
       logger.error('Failed to update like status:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSave = () => {
+    const newIsSaved = !isSaved;
+    setIsSaved(newIsSaved);
+
+    try {
+      const savedPosts = localStorage.getItem('saved_posts');
+      let savedPostsArray = savedPosts ? JSON.parse(savedPosts) : [];
+
+      if (newIsSaved) {
+        // Add to saved posts
+        const savedPost = {
+          postId: post.id,
+          savedAt: new Date().toISOString(),
+          feedItem: feedItem,
+        };
+        savedPostsArray.push(savedPost);
+
+        // Track save event in Google Analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'save_post', {
+            post_id: post.id,
+            ianfluencer_username: iAnfluencer.username,
+            niche: iAnfluencer.niche,
+            event_category: 'Engagement',
+          });
+        }
+
+        logger.info('Post guardado:', post.id);
+      } else {
+        // Remove from saved posts
+        savedPostsArray = savedPostsArray.filter((savedPost: any) => savedPost.postId !== post.id);
+
+        // Track unsave event in Google Analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'unsave_post', {
+            post_id: post.id,
+            ianfluencer_username: iAnfluencer.username,
+            niche: iAnfluencer.niche,
+            event_category: 'Engagement',
+          });
+        }
+
+        logger.info('Post removido de guardados:', post.id);
+      }
+
+      localStorage.setItem('saved_posts', JSON.stringify(savedPostsArray));
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('savedPostsChanged'));
+    } catch (error) {
+      // Revert on error
+      setIsSaved(!newIsSaved);
+      logger.error('Failed to save post:', error);
     }
   };
 
@@ -300,6 +371,22 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
               </svg>
             </button>
           </div>
+          <button
+            onClick={handleSave}
+            className="focus:outline-none"
+            aria-label={isSaved ? 'Quitar de guardados' : 'Guardar post'}
+            aria-pressed={isSaved}
+          >
+            <svg
+              className={`w-6 h-6 ${isSaved ? 'fill-current text-purple-600' : 'text-gray-700'}`}
+              fill={isSaved ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          </button>
         </div>
 
         {/* Likes count */}

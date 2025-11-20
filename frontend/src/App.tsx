@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Feed from './components/Feed';
 import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
+import SavedPostsView from './components/SavedPostsView';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -11,7 +12,7 @@ import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 
-type View = 'landing' | 'feed' | 'profile';
+type View = 'landing' | 'feed' | 'profile' | 'saved';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -48,6 +49,10 @@ function App() {
 
   const handleShowLanding = () => {
     setCurrentView('landing');
+  };
+
+  const handleShowSavedPosts = () => {
+    setCurrentView('saved');
   };
 
   const handleProfileClick = (username: string) => {
@@ -185,10 +190,19 @@ function App() {
     );
   }
 
+  // Show saved posts view
+  if (currentView === 'saved') {
+    return (
+      <Layout showHeader={false}>
+        <SavedPostsView onBack={handleBackToFeed} onProfileClick={handleProfileClick} />
+      </Layout>
+    );
+  }
+
   // Show feed view
   if (loading) {
     return (
-      <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding}>
+      <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding} onShowSavedPosts={handleShowSavedPosts}>
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
         </div>
@@ -197,7 +211,7 @@ function App() {
   }
 
   return (
-    <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding}>
+    <Layout onSearch={handleSearch} searchTerm={searchTerm} onClearSearch={handleClearSearch} onShowLanding={handleShowLanding} onShowSavedPosts={handleShowSavedPosts}>
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
           <div className="flex">

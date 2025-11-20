@@ -5,10 +5,12 @@ interface HeaderProps {
   searchTerm?: string;
   onClearSearch?: () => void;
   onShowLanding?: () => void;
+  onShowSavedPosts?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch, onShowLanding }) => {
+const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTerm, onClearSearch, onShowLanding, onShowSavedPosts }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [savedPostsCount, setSavedPostsCount] = useState(0);
 
   // Sync internal state with external searchTerm prop
   useEffect(() => {
@@ -16,6 +18,36 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
       setSearchTerm(externalSearchTerm);
     }
   }, [externalSearchTerm]);
+
+  // Load saved posts count
+  const updateSavedPostsCount = () => {
+    try {
+      const savedPosts = localStorage.getItem('saved_posts');
+      if (savedPosts) {
+        const parsedPosts = JSON.parse(savedPosts);
+        setSavedPostsCount(parsedPosts.length);
+      } else {
+        setSavedPostsCount(0);
+      }
+    } catch (error) {
+      setSavedPostsCount(0);
+    }
+  };
+
+  useEffect(() => {
+    updateSavedPostsCount();
+
+    // Listen for changes to saved posts
+    const handleSavedPostsChange = () => {
+      updateSavedPostsCount();
+    };
+
+    window.addEventListener('savedPostsChanged', handleSavedPostsChange);
+
+    return () => {
+      window.removeEventListener('savedPostsChanged', handleSavedPostsChange);
+    };
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -45,6 +77,18 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
       });
     }
     onShowLanding?.();
+  };
+
+  const handleSavedPostsClick = () => {
+    // Track "Favoritos" button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_saved_posts_click', {
+        saved_posts_count: savedPostsCount,
+        event_category: 'Navigation',
+        event_label: 'Header Button',
+      });
+    }
+    onShowSavedPosts?.();
   };
 
   return (
@@ -86,10 +130,19 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchTerm: externalSearchTer
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Favoritos">
+            <button
+              onClick={handleSavedPostsClick}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+              aria-label="Favoritos"
+            >
               <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
+              {savedPostsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {savedPostsCount > 9 ? '9+' : savedPostsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
