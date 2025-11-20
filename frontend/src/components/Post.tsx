@@ -15,6 +15,10 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [postComments, setPostComments] = useState(comments);
+  const [commentsCount, setCommentsCount] = useState(comments.length);
 
   // Load like status from API on component mount
   useEffect(() => {
@@ -101,6 +105,68 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
     return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  const handleAddComment = async () => {
+    if (!commentText.trim() || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+
+    // Optimistic update - add comment immediately to UI
+    const optimisticComment = {
+      id: `temp-${Date.now()}`,
+      postId: post.id,
+      iAnfluencerId: '',
+      content: commentText,
+      isAiGenerated: false,
+      aiGenerationParams: null,
+      createdAt: new Date().toISOString(),
+      authorUsername: 'Usuario Anónimo'
+    };
+
+    setPostComments([...postComments, optimisticComment]);
+    setCommentsCount(commentsCount + 1);
+    const previousCommentText = commentText;
+    setCommentText('');
+
+    try {
+      const newComment = await apiService.addComment(post.id, previousCommentText);
+
+      // Replace optimistic comment with actual comment from API
+      setPostComments(prevComments =>
+        prevComments.map(c => c.id === optimisticComment.id ? newComment : c)
+      );
+
+      // Track add_comment event in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        const utmParams = getStoredUTMParameters();
+        const eventData: any = {
+          post_id: post.id,
+          ianfluencer_username: iAnfluencer.username,
+          comment_length: previousCommentText.length,
+          event_category: 'Engagement',
+        };
+
+        if (utmParams) {
+          eventData.utm_source = utmParams.source;
+          eventData.utm_campaign = utmParams.campaign;
+          eventData.is_referred_user = true;
+        }
+
+        (window as any).gtag('event', 'add_comment', eventData);
+      }
+
+      logger.info('Comment added successfully');
+    } catch (error) {
+      // Revert optimistic update on error
+      setPostComments(postComments);
+      setCommentsCount(commentsCount);
+      setCommentText(previousCommentText);
+      logger.error('Failed to add comment:', error);
+      alert('Error al agregar el comentario. Por favor, intenta nuevamente.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   const handleShare = async () => {
@@ -285,7 +351,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
                 (window as any).gtag('event', 'view_comments', {
                   post_id: post.id,
                   ianfluencer_username: iAnfluencer.username,
-                  comments_count: comments.length,
+                  comments_count: commentsCount,
                   event_category: 'Engagement',
                 });
               }
@@ -321,19 +387,21 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
         </div>
 
         {/* Comments toggle */}
-        {comments.length > 0 && (
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="text-sm text-gray-500 mb-2 focus:outline-none"
-          >
-            {showComments ? 'Ocultar comentarios' : `Ver los ${comments.length} comentarios`}
-          </button>
-        )}
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="text-sm text-gray-500 mb-2 focus:outline-none hover:text-gray-700"
+        >
+          {showComments
+            ? 'Ocultar comentarios'
+            : commentsCount > 0
+              ? `Ver los ${commentsCount} comentarios`
+              : 'Añadir un comentario'}
+        </button>
 
         {/* Comments */}
         {showComments && (
-          <div className="space-y-2">
-            {comments.slice(0, 3).map((comment) => (
+          <div className="space-y-2 mb-3">
+            {postComments.slice(0, 10).map((comment) => (
               <div key={comment.id} className="text-sm">
                 <span className="font-semibold text-gray-900 mr-2">
                   {comment.authorUsername || `Usuario_${comment.iAnfluencerId}`}
@@ -341,6 +409,39 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
                 <span className="text-gray-900">{comment.content}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Add Comment Input - Always visible when comments section is open */}
+        {showComments && (
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex items-start space-x-2">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Añade un comentario..."
+                className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                rows={2}
+                maxLength={500}
+                disabled={isSubmittingComment}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!commentText.trim() || isSubmittingComment}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  !commentText.trim() || isSubmittingComment
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+              >
+                {isSubmittingComment ? 'Enviando...' : 'Publicar'}
+              </button>
+            </div>
+            {commentText.length > 0 && (
+              <div className="text-xs text-gray-500 mt-1">
+                {commentText.length}/500 caracteres
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -43,8 +43,18 @@ class CommentController extends Controller
         try {
             $commentData = $request->validated();
 
-            if (!isset($commentData['is_ai_generated'])) {
-                $commentData['is_ai_generated'] = true;
+            // If no i_anfluencer_id provided, this is a human comment
+            if (!isset($commentData['i_anfluencer_id'])) {
+                $commentData['is_ai_generated'] = false;
+                // Use session_id or generate a temporary identifier for human comments
+                $sessionId = session()->getId();
+                // For now, we'll set i_anfluencer_id to null (will need DB migration to allow nullable)
+                // Temporary workaround: use a default "human user" IAnfluencer ID (will be replaced with auth)
+                $commentData['i_anfluencer_id'] = null;
+            } else {
+                if (!isset($commentData['is_ai_generated'])) {
+                    $commentData['is_ai_generated'] = true;
+                }
             }
 
             $comment = Comment::create($commentData);

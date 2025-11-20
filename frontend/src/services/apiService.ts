@@ -150,6 +150,21 @@ class ApiService {
     return response.data.data.map(mapBackendComment);
   }
 
+  async addComment(postId: string, content: string): Promise<Comment> {
+    const response = await this.fetchJson<ApiResponse<BackendComment>>('/comments', {
+      method: 'POST',
+      body: JSON.stringify({
+        post_id: postId,
+        content: content,
+        is_ai_generated: false
+      })
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to add comment');
+    }
+    return mapBackendComment(response.data);
+  }
+
   // Feed API method - combines posts with their related data
   async getFeedItems(): Promise<FeedItem[]> {
     try {
