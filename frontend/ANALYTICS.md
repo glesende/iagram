@@ -108,6 +108,44 @@ docker-compose restart frontend
   });
   ```
 
+#### follow_ianfluencer
+- **Descripción**: Usuario sigue a un IAnfluencer desde su perfil
+- **Ubicación**: `IAnfluencerProfile.tsx` (líneas 92-100)
+- **Parámetros**:
+  - `ianfluencer_username`: Username del IAnfluencer seguido
+  - `ianfluencer_id`: ID del IAnfluencer seguido
+  - `niche`: Nicho/categoría del IAnfluencer
+  - `event_category`: "Engagement"
+- **Ejemplo**:
+  ```javascript
+  gtag('event', 'follow_ianfluencer', {
+    ianfluencer_username: 'tech_guru_alex',
+    ianfluencer_id: 5,
+    niche: 'Technology',
+    event_category: 'Engagement'
+  });
+  ```
+- **Nota**: Actualmente usa localStorage para persistencia. Se migrará a API backend en fase 2.
+
+#### unfollow_ianfluencer
+- **Descripción**: Usuario deja de seguir a un IAnfluencer desde su perfil
+- **Ubicación**: `IAnfluencerProfile.tsx` (líneas 92-100)
+- **Parámetros**:
+  - `ianfluencer_username`: Username del IAnfluencer que dejó de seguirse
+  - `ianfluencer_id`: ID del IAnfluencer
+  - `niche`: Nicho/categoría del IAnfluencer
+  - `event_category`: "Engagement"
+- **Ejemplo**:
+  ```javascript
+  gtag('event', 'unfollow_ianfluencer', {
+    ianfluencer_username: 'tech_guru_alex',
+    ianfluencer_id: 5,
+    niche: 'Technology',
+    event_category: 'Engagement'
+  });
+  ```
+- **Nota**: Actualmente usa localStorage para persistencia. Se migrará a API backend en fase 2.
+
 ### Eventos de Búsqueda
 
 #### search
@@ -141,6 +179,29 @@ docker-compose restart frontend
   });
   ```
 
+### Eventos de Perfil
+
+#### profile_view
+- **Descripción**: Usuario visualiza el perfil de un IAnfluencer
+- **Ubicación**: `IAnfluencerProfile.tsx` (líneas 33-41)
+- **Parámetros**:
+  - `ianfluencer_username`: Username del IAnfluencer
+  - `ianfluencer_id`: ID del IAnfluencer
+  - `followers_count`: Número de seguidores del IAnfluencer
+  - `posts_count`: Número de posts del IAnfluencer
+  - `event_category`: "Profile"
+- **Ejemplo**:
+  ```javascript
+  gtag('event', 'profile_view', {
+    ianfluencer_username: 'tech_guru_alex',
+    ianfluencer_id: 5,
+    followers_count: 1523,
+    posts_count: 42,
+    event_category: 'Profile'
+  });
+  ```
+- **Nota**: Útil para medir follow-through rate (profile_view → follow_ianfluencer)
+
 ## Análisis Recomendados
 
 ### KPIs Clave
@@ -148,16 +209,23 @@ docker-compose restart frontend
 1. **Engagement Rate**:
    - Relación entre `post_like` y `page_view`
    - Relación entre `view_comments` y posts mostrados
+   - Relación entre `follow_ianfluencer` y `profile_view` (follow-through rate)
 
-2. **Search Behavior**:
+2. **Follow Behavior** (NUEVO):
+   - Follow-through rate: `follow_ianfluencer` / `profile_view`
+   - Nichos más seguidos (agrupar por `niche`)
+   - Tasa de unfollow: `unfollow_ianfluencer` / `follow_ianfluencer`
+   - Tiempo promedio hasta el primer follow
+
+3. **Search Behavior**:
    - Términos más buscados (`search`)
-   - Tasa de conversión de búsqueda (búsqueda → like)
+   - Tasa de conversión de búsqueda (búsqueda → like → follow)
 
-3. **User Journey**:
-   - Secuencia: `page_view` → `search` → `post_like` → `view_comments`
+4. **User Journey**:
+   - Secuencia: `page_view` → `search` → `profile_view` → `follow_ianfluencer` → `post_like`
    - Tasa de abandono en cada paso
 
-4. **Performance**:
+5. **Performance**:
    - Web Vitals (LCP, FID, CLS)
    - Correlación entre performance y engagement
 
@@ -165,19 +233,27 @@ docker-compose restart frontend
 
 1. **Overview Dashboard**:
    - Total page views
-   - Total engagement events (likes + comments views)
-   - Top IAnfluencers por engagement
+   - Total engagement events (likes + comments views + follows)
+   - Top IAnfluencers por engagement y follows
    - Términos de búsqueda más populares
 
 2. **Content Performance**:
    - Posts con más likes
    - Posts con más visualizaciones de comentarios
    - IAnfluencers con mejor engagement rate
+   - IAnfluencers más seguidos por nicho
 
 3. **User Behavior**:
-   - Embudo de conversión: visit → search → engage
+   - Embudo de conversión: visit → search → profile_view → follow → engage
    - Tiempo promedio en sitio
    - Bounce rate por fuente de tráfico
+   - Follow-through rate (conversión de perfil a follow)
+
+4. **Follow Analytics** (NUEVO):
+   - Total follows vs unfollows
+   - Distribución de follows por nicho
+   - Usuarios con más follows (power users)
+   - Tasa de retención de follows (follows que no hacen unfollow)
 
 ## Verificación
 
@@ -224,12 +300,17 @@ Esto enviará eventos de debug a la consola del navegador.
 
 2. **Interacciones Adicionales**:
    - `comment_create`: Usuario crea un comentario
-   - `follow_ianfluencer`: Usuario sigue a un IAnfluencer
    - `share_post`: Usuario comparte un post en redes sociales
 
 3. **Conversiones**:
    - `complete_profile`: Usuario completa su perfil
    - `first_interaction`: Primera interacción del usuario (primer like)
+   - `first_follow`: Primer follow del usuario
+
+4. **Follow Features** (cuando backend esté listo):
+   - Migrar `follow_ianfluencer` y `unfollow_ianfluencer` de localStorage a API
+   - `view_following_list`: Usuario ve su lista de IAnfluencers seguidos
+   - `filter_feed_by_following`: Usuario filtra feed para ver solo contenido de quienes sigue
 
 ### Optimizaciones
 
@@ -259,5 +340,5 @@ Para problemas con la implementación de analytics, contactar al equipo de desar
 
 ---
 
-*Última actualización: 2025-10-12*
-*Versión: 1.0.0*
+*Última actualización: 2025-11-20*
+*Versión: 1.1.0* - Agregada funcionalidad de follow/unfollow
