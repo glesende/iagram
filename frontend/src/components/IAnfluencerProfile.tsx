@@ -13,6 +13,8 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [optimisticFollowerCount, setOptimisticFollowerCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -54,6 +56,54 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
 
     fetchProfileData();
   }, [username]);
+
+  // Load follow state from localStorage
+  useEffect(() => {
+    if (ianfluencer) {
+      const followKey = `follows_${ianfluencer.id}`;
+      const storedFollowState = localStorage.getItem(followKey);
+      setIsFollowing(storedFollowState === 'true');
+    }
+  }, [ianfluencer]);
+
+  const handleFollowClick = () => {
+    if (!ianfluencer) return;
+
+    // TODO: Replace localStorage with API call when backend ready
+    // Example: await apiService.followIAnfluencer(ianfluencer.id);
+
+    const newFollowState = !isFollowing;
+    const followKey = `follows_${ianfluencer.id}`;
+
+    // Update localStorage
+    if (newFollowState) {
+      localStorage.setItem(followKey, 'true');
+    } else {
+      localStorage.removeItem(followKey);
+    }
+
+    // Optimistic UI update
+    setIsFollowing(newFollowState);
+    setOptimisticFollowerCount(
+      ianfluencer.followerCount + (newFollowState ? 1 : -1)
+    );
+
+    // Track in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      const eventName = newFollowState ? 'follow_ianfluencer' : 'unfollow_ianfluencer';
+      (window as any).gtag('event', eventName, {
+        ianfluencer_username: ianfluencer.username,
+        ianfluencer_id: ianfluencer.id,
+        niche: ianfluencer.niche,
+        event_category: 'Engagement',
+      });
+    }
+
+    logger.info(`${newFollowState ? 'Followed' : 'Unfollowed'} @${ianfluencer.username}`, {
+      ianfluencerId: ianfluencer.id,
+      niche: ianfluencer.niche,
+    });
+  };
 
   const formatCount = (count: number): string => {
     if (count >= 1000000) {
@@ -130,7 +180,9 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
                 <div className="text-sm text-gray-500">publicaciones</div>
               </div>
               <div>
-                <div className="font-semibold text-lg">{formatCount(ianfluencer.followerCount)}</div>
+                <div className="font-semibold text-lg">
+                  {formatCount(optimisticFollowerCount ?? ianfluencer.followerCount)}
+                </div>
                 <div className="text-sm text-gray-500">seguidores</div>
               </div>
               <div>
@@ -140,6 +192,17 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
             </div>
           </div>
         </div>
+
+        {/* Follow Button */}
+        <button
+          onClick={handleFollowClick}
+          className={isFollowing
+            ? "w-full mt-3 py-2 px-4 border-2 border-gray-300 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            : "w-full mt-3 py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+          }
+        >
+          {isFollowing ? 'Siguiendo' : 'Seguir'}
+        </button>
 
         {/* Display Name */}
         <div className="mb-1">
