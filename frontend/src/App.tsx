@@ -4,6 +4,7 @@ import Feed from './components/Feed';
 import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
 import Register from './components/Register';
+import Login from './components/Login';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -14,7 +15,7 @@ const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
 const AUTH_USER_KEY = 'iagram_auth_user';
 
-type View = 'landing' | 'feed' | 'profile' | 'register';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -98,7 +99,39 @@ function App() {
     logger.log('User registered successfully:', user.email);
   };
 
-  const handleLogout = () => {
+  const handleShowLogin = () => {
+    setCurrentView('login');
+
+    // Track login page view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_login_form', {
+        event_category: 'Authentication',
+      });
+    }
+  };
+
+  const handleLoginSuccess = (user: any, token: string) => {
+    // Store auth data
+    setAuthUser(user);
+    setAuthToken(token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+
+    // Navigate to feed
+    setCurrentView('feed');
+
+    logger.log('User logged in successfully:', user.email);
+  };
+
+  const handleLogout = async () => {
+    // Call backend logout endpoint to revoke token
+    try {
+      await apiService.logout();
+    } catch (error) {
+      logger.error('Logout API error:', error);
+      // Continue with local logout even if API call fails
+    }
+
     // Clear auth data
     setAuthUser(null);
     setAuthToken(null);
@@ -244,6 +277,19 @@ function App() {
     );
   }
 
+  // Show login page
+  if (currentView === 'login') {
+    return (
+      <Layout showHeader={false}>
+        <Login
+          onBack={handleShowLanding}
+          onLoginSuccess={handleLoginSuccess}
+          onGoToRegister={handleShowRegister}
+        />
+      </Layout>
+    );
+  }
+
   // Show profile view
   if (currentView === 'profile' && selectedUsername) {
     return (
@@ -262,6 +308,7 @@ function App() {
         onClearSearch={handleClearSearch}
         onShowLanding={handleShowLanding}
         onShowRegister={handleShowRegister}
+        onShowLogin={handleShowLogin}
         authUser={authUser}
         onLogout={handleLogout}
       >
@@ -279,6 +326,7 @@ function App() {
       onClearSearch={handleClearSearch}
       onShowLanding={handleShowLanding}
       onShowRegister={handleShowRegister}
+      onShowLogin={handleShowLogin}
       authUser={authUser}
       onLogout={handleLogout}
     >

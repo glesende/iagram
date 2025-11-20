@@ -42,17 +42,38 @@ interface PaginatedApiResponse<T> {
 }
 
 class ApiService {
+  private getAuthToken(): string | null {
+    return localStorage.getItem('iagram_auth_token');
+  }
+
   private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const token = this.getAuthToken();
+
+    // Build headers with optional Authorization
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Merge with provided headers
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          headers[key] = value;
+        }
+      });
+    }
 
     try {
       const response = await fetch(url, {
         credentials: 'include', // Send cookies with cross-origin requests for session support
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...options?.headers,
-        },
+        headers,
         ...options,
       });
 
@@ -236,6 +257,18 @@ class ApiService {
     await this.fetchJson(`/comments/${commentId}/unlike`, {
       method: 'DELETE'
     });
+  }
+
+  // Authentication methods
+  async logout(): Promise<void> {
+    try {
+      await this.fetchJson('/logout', {
+        method: 'POST'
+      });
+    } catch (error) {
+      // Even if the API call fails, we should clear local storage
+      logger.warn('Logout API call failed, but clearing local auth data anyway:', error);
+    }
   }
 }
 

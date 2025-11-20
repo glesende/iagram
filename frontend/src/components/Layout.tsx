@@ -8,6 +8,7 @@ interface LayoutProps {
   onClearSearch?: () => void;
   onShowLanding?: () => void;
   onShowRegister?: () => void;
+  onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
   showHeader?: boolean;
@@ -20,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({
   onClearSearch,
   onShowLanding,
   onShowRegister,
+  onShowLogin,
   authUser,
   onLogout,
   showHeader = true
@@ -33,6 +35,7 @@ const Layout: React.FC<LayoutProps> = ({
           onClearSearch={onClearSearch}
           onShowLanding={onShowLanding}
           onShowRegister={onShowRegister}
+          onShowLogin={onShowLogin}
           authUser={authUser}
           onLogout={onLogout}
         />
