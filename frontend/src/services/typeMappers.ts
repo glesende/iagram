@@ -29,6 +29,7 @@ export interface BackendPost {
   likes_count: number;
   comments_count: number;
   is_ai_generated: boolean;
+  is_liked?: boolean;
   published_at: string;
   created_at: string;
   updated_at: string;
@@ -78,7 +79,7 @@ export function mapBackendPost(backend: BackendPost): Post {
     createdAt: backend.published_at || backend.created_at,
     likesCount: backend.likes_count || 0,
     commentsCount: backend.comments_count || 0,
-    isLiked: false // Will be determined by user interaction data later
+    isLiked: backend.is_liked ?? false // Now comes from backend
   };
 }
 
