@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
 import Register from './components/Register';
 import Login from './components/Login';
+import SavedPostsView from './components/SavedPostsView';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -15,7 +16,7 @@ const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
 const AUTH_USER_KEY = 'iagram_auth_user';
 
-type View = 'landing' | 'feed' | 'profile' | 'register' | 'login';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -146,6 +147,17 @@ function App() {
     }
 
     logger.log('User logged out');
+  };
+
+  const handleShowSavedPosts = () => {
+    setCurrentView('saved');
+
+    // Track saved posts view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'navigate_to_saved_posts', {
+        event_category: 'Navigation',
+      });
+    }
   };
 
   const filterFeedItems = (items: FeedItem[], term: string) => {
@@ -299,6 +311,15 @@ function App() {
     );
   }
 
+  // Show saved posts view
+  if (currentView === 'saved') {
+    return (
+      <Layout showHeader={false}>
+        <SavedPostsView onBack={handleBackToFeed} onProfileClick={handleProfileClick} />
+      </Layout>
+    );
+  }
+
   // Show feed view
   if (loading) {
     return (
@@ -311,6 +332,7 @@ function App() {
         onShowLogin={handleShowLogin}
         authUser={authUser}
         onLogout={handleLogout}
+        onShowSavedPosts={handleShowSavedPosts}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -329,6 +351,7 @@ function App() {
       onShowLogin={handleShowLogin}
       authUser={authUser}
       onLogout={handleLogout}
+      onShowSavedPosts={handleShowSavedPosts}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">

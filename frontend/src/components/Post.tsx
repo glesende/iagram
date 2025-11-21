@@ -3,6 +3,7 @@ import { FeedItem } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
+import { savePost, unsavePost, isPostSaved } from '../utils/savedPosts';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -15,6 +16,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(isPostSaved(post.id));
 
   const handleLike = async () => {
     if (isLoading) return;
@@ -85,6 +87,53 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
     return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  const handleSave = () => {
+    const newIsSaved = !isSaved;
+
+    // Optimistic update
+    setIsSaved(newIsSaved);
+
+    if (newIsSaved) {
+      const success = savePost(feedItem);
+      if (!success) {
+        // Revert if save failed
+        setIsSaved(false);
+        return;
+      }
+
+      // Track save event in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'save_post', {
+          post_id: post.id,
+          ianfluencer_username: iAnfluencer.username,
+          niche: iAnfluencer.niche,
+          event_category: 'Engagement',
+        });
+      }
+
+      logger.log('Post guardado:', post.id);
+    } else {
+      const success = unsavePost(post.id);
+      if (!success) {
+        // Revert if unsave failed
+        setIsSaved(true);
+        return;
+      }
+
+      // Track unsave event in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'unsave_post', {
+          post_id: post.id,
+          ianfluencer_username: iAnfluencer.username,
+          niche: iAnfluencer.niche,
+          event_category: 'Engagement',
+        });
+      }
+
+      logger.log('Post eliminado de guardados:', post.id);
+    }
   };
 
   const handleShare = async () => {
@@ -284,6 +333,21 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
               </svg>
             </button>
           </div>
+          <button
+            onClick={handleSave}
+            className="focus:outline-none"
+            aria-label={isSaved ? 'Quitar de guardados' : 'Guardar post'}
+          >
+            <svg
+              className={`w-6 h-6 ${isSaved ? 'fill-current text-purple-600' : 'text-gray-700'}`}
+              fill={isSaved ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          </button>
         </div>
 
         {/* Likes count */}
