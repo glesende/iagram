@@ -12,6 +12,8 @@ class Comment extends Model
     protected $fillable = [
         'post_id',
         'i_anfluencer_id',
+        'session_id',
+        'author_name',
         'content',
         'is_ai_generated',
         'ai_generation_params',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FeedItem } from '../types';
+import { FeedItem, Comment } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
@@ -18,6 +18,10 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(isPostSaved(post.id));
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [localComments, setLocalComments] = useState(comments);
+  const [commentsCount, setCommentsCount] = useState(comments.length);
 
   const handleLike = async () => {
     if (isLoading) return;
@@ -236,6 +240,78 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
     }
   };
 
+  const handleAddComment = async () => {
+    if (!commentText.trim() || isSubmittingComment) return;
+
+    const trimmedComment = commentText.trim();
+    setIsSubmittingComment(true);
+
+    // Optimistic update - add comment immediately to UI
+    const optimisticComment: Comment = {
+      id: `temp-${Date.now()}`,
+      postId: post.id,
+      iAnfluencerId: '', // Will be updated when backend responds
+      content: trimmedComment,
+      likesCount: 0,
+      isLiked: false,
+      createdAt: new Date().toISOString(),
+      authorUsername: 'Usuario Anónimo'
+    };
+
+    setLocalComments([...localComments, optimisticComment]);
+    setCommentsCount(commentsCount + 1);
+    setCommentText(''); // Clear input immediately
+
+    try {
+      const newComment = await apiService.addComment(post.id, trimmedComment);
+
+      // Replace optimistic comment with real one
+      setLocalComments(prev =>
+        prev.map(c => c.id === optimisticComment.id ? newComment : c)
+      );
+
+      // Track comment event in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        const utmParams = getStoredUTMParameters();
+        const eventData: any = {
+          post_id: post.id,
+          ianfluencer_username: iAnfluencer.username,
+          comment_length: trimmedComment.length,
+          event_category: 'Engagement',
+        };
+
+        // Add UTM parameters if user came from a shared link
+        if (utmParams) {
+          eventData.utm_source = utmParams.source;
+          eventData.utm_campaign = utmParams.campaign;
+          eventData.is_referred_user = true;
+        }
+
+        (window as any).gtag('event', 'add_comment', eventData);
+      }
+
+      logger.log('Comentario agregado exitosamente');
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalComments(prev => prev.filter(c => c.id !== optimisticComment.id));
+      setCommentsCount(commentsCount);
+      setCommentText(trimmedComment); // Restore text so user can try again
+      logger.error('Error al agregar comentario:', error);
+
+      // Show user-friendly error message
+      alert('No se pudo publicar el comentario. Por favor, intenta de nuevo.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddComment();
+    }
+  };
+
   return (
     <article className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
@@ -328,7 +404,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
               if (newShowComments) {
                 onAnonymousInteraction?.();
               }
-            }} className="focus:outline-none" aria-label="Ver comentarios">
+            }} className="focus:outline-none" aria-label={showComments ? 'Ocultar comentarios' : 'Ver comentarios'}>
               <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -374,20 +450,27 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
           <span className="text-sm text-gray-900">{post.content}</span>
         </div>
 
-        {/* Comments toggle */}
-        {comments.length > 0 && (
+        {/* Comments toggle or add comment button */}
+        {commentsCount > 0 ? (
           <button
             onClick={() => setShowComments(!showComments)}
-            className="text-sm text-gray-500 mb-2 focus:outline-none"
+            className="text-sm text-gray-500 mb-2 focus:outline-none hover:text-gray-700"
           >
-            {showComments ? 'Ocultar comentarios' : `Ver los ${comments.length} comentarios`}
+            {showComments ? 'Ocultar comentarios' : `Ver los ${commentsCount} comentarios`}
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="text-sm text-gray-500 mb-2 focus:outline-none hover:text-gray-700"
+          >
+            {showComments ? 'Ocultar' : 'Añadir un comentario'}
           </button>
         )}
 
         {/* Comments */}
-        {showComments && (
-          <div className="space-y-2">
-            {comments.slice(0, 3).map((comment) => (
+        {showComments && localComments.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {localComments.map((comment) => (
               <div key={comment.id} className="text-sm">
                 <span className="font-semibold text-gray-900 mr-2">
                   {comment.authorUsername || `Usuario_${comment.iAnfluencerId}`}
@@ -395,6 +478,38 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
                 <span className="text-gray-900">{comment.content}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Add comment input */}
+        {showComments && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="flex items-start space-x-2">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Añade un comentario..."
+                className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                rows={2}
+                maxLength={500}
+                disabled={isSubmittingComment}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!commentText.trim() || isSubmittingComment}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  !commentText.trim() || isSubmittingComment
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
+              >
+                {isSubmittingComment ? 'Enviando...' : 'Publicar'}
+              </button>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {commentText.length}/500 caracteres
+            </div>
           </div>
         )}
       </div>
