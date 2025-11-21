@@ -11,6 +11,7 @@ interface LayoutProps {
   onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
+  onShowSavedPosts?: () => void;
   showHeader?: boolean;
 }
 
@@ -24,6 +25,7 @@ const Layout: React.FC<LayoutProps> = ({
   onShowLogin,
   authUser,
   onLogout,
+  onShowSavedPosts,
   showHeader = true
 }) => {
   return (
@@ -38,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({
           onShowLogin={onShowLogin}
           authUser={authUser}
           onLogout={onLogout}
+          onShowSavedPosts={onShowSavedPosts}
         />
       )}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">

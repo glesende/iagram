@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getSavedPostsCount } from '../utils/savedPosts';
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
@@ -9,6 +10,7 @@ interface HeaderProps {
   onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
+  onShowSavedPosts?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -19,10 +21,12 @@ const Header: React.FC<HeaderProps> = ({
   onShowRegister,
   onShowLogin,
   authUser,
-  onLogout
+  onLogout,
+  onShowSavedPosts
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [savedPostsCount, setSavedPostsCount] = useState(0);
 
   // Sync internal state with external searchTerm prop
   useEffect(() => {
@@ -30,6 +34,33 @@ const Header: React.FC<HeaderProps> = ({
       setSearchTerm(externalSearchTerm);
     }
   }, [externalSearchTerm]);
+
+  // Update saved posts count
+  useEffect(() => {
+    const updateCount = () => {
+      setSavedPostsCount(getSavedPostsCount());
+    };
+
+    // Update count on mount
+    updateCount();
+
+    // Update count when localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'iagram_saved_posts') {
+        updateCount();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Poll for changes every second (for same-tab updates)
+    const interval = setInterval(updateCount, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -88,6 +119,18 @@ const Header: React.FC<HeaderProps> = ({
     onLogout?.();
   };
 
+  const handleSavedPostsClick = () => {
+    // Track favoritos button click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'header_favoritos_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Favoritos Button',
+        saved_posts_count: savedPostsCount,
+      });
+    }
+    onShowSavedPosts?.();
+  };
+
   return (
     <header className="bg-white border-b border-gray-300 sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,6 +167,25 @@ const Header: React.FC<HeaderProps> = ({
                 </svg>
               </div>
             </form>
+
+            {/* Favoritos button */}
+            {onShowSavedPosts && (
+              <button
+                onClick={handleSavedPostsClick}
+                className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Ver posts guardados"
+                title="Favoritos"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                {savedPostsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {savedPostsCount > 9 ? '9+' : savedPostsCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
