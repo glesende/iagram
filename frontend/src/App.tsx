@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
 import Register from './components/Register';
 import Login from './components/Login';
+import RegisterReminderModal from './components/RegisterReminderModal';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -14,6 +15,9 @@ import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
 const AUTH_USER_KEY = 'iagram_auth_user';
+const ANONYMOUS_INTERACTIONS_KEY = 'iagram_anonymous_interactions';
+const REMINDER_SHOWN_COUNT_KEY = 'reminder_shown_count';
+const INTERACTION_THRESHOLD = 5;
 
 type View = 'landing' | 'feed' | 'profile' | 'register' | 'login';
 
@@ -28,6 +32,8 @@ function App() {
   const [authUser, setAuthUser] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [anonymousInteractions, setAnonymousInteractions] = useState(0);
+  const [showReminderModal, setShowReminderModal] = useState(false);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -148,6 +154,49 @@ function App() {
     logger.log('User logged out');
   };
 
+  const trackAnonymousInteraction = () => {
+    // Don't track if user is already authenticated
+    if (authUser) return;
+
+    const newCount = anonymousInteractions + 1;
+    setAnonymousInteractions(newCount);
+    localStorage.setItem(ANONYMOUS_INTERACTIONS_KEY, newCount.toString());
+
+    // Check if we should show the reminder
+    const reminderShownCount = parseInt(localStorage.getItem(REMINDER_SHOWN_COUNT_KEY) || '0');
+
+    // Show reminder at thresholds: 5, 15 (max 2 times per session)
+    const shouldShowReminder =
+      reminderShownCount < 2 &&
+      (newCount === INTERACTION_THRESHOLD || newCount === INTERACTION_THRESHOLD * 3);
+
+    if (shouldShowReminder) {
+      setShowReminderModal(true);
+      const newReminderCount = reminderShownCount + 1;
+      localStorage.setItem(REMINDER_SHOWN_COUNT_KEY, newReminderCount.toString());
+
+      // Track reminder shown in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'register_reminder_shown', {
+          anonymous_interactions: newCount,
+          session_id: Date.now(),
+          event_category: 'Conversion',
+        });
+      }
+
+      logger.info(`Register reminder shown after ${newCount} interactions (count: ${newReminderCount})`);
+    }
+  };
+
+  const handleReminderClose = () => {
+    setShowReminderModal(false);
+  };
+
+  const handleReminderRegister = () => {
+    setShowReminderModal(false);
+    handleShowRegister();
+  };
+
   const filterFeedItems = (items: FeedItem[], term: string) => {
     if (!term.trim()) {
       setFilteredFeedItems(items);
@@ -239,6 +288,12 @@ function App() {
       setAuthUser(JSON.parse(storedUser));
     }
 
+    // Load anonymous interactions count from localStorage
+    const storedInteractions = localStorage.getItem(ANONYMOUS_INTERACTIONS_KEY);
+    if (storedInteractions) {
+      setAnonymousInteractions(parseInt(storedInteractions));
+    }
+
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
@@ -294,7 +349,18 @@ function App() {
   if (currentView === 'profile' && selectedUsername) {
     return (
       <Layout showHeader={false}>
-        <IAnfluencerProfile username={selectedUsername} onBack={handleBackToFeed} />
+        <IAnfluencerProfile
+          username={selectedUsername}
+          onBack={handleBackToFeed}
+          onAnonymousInteraction={trackAnonymousInteraction}
+        />
+        {/* Register Reminder Modal */}
+        <RegisterReminderModal
+          isOpen={showReminderModal}
+          onClose={handleReminderClose}
+          onRegister={handleReminderRegister}
+          anonymousInteractions={anonymousInteractions}
+        />
       </Layout>
     );
   }
@@ -311,6 +377,7 @@ function App() {
         onShowLogin={handleShowLogin}
         authUser={authUser}
         onLogout={handleLogout}
+        onAnonymousInteraction={trackAnonymousInteraction}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -329,6 +396,7 @@ function App() {
       onShowLogin={handleShowLogin}
       authUser={authUser}
       onLogout={handleLogout}
+      onAnonymousInteraction={trackAnonymousInteraction}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
@@ -344,6 +412,14 @@ function App() {
         onRefresh={fetchFeedData}
         onClearSearch={handleClearSearch}
         onProfileClick={handleProfileClick}
+        onAnonymousInteraction={trackAnonymousInteraction}
+      />
+      {/* Register Reminder Modal */}
+      <RegisterReminderModal
+        isOpen={showReminderModal}
+        onClose={handleReminderClose}
+        onRegister={handleReminderRegister}
+        anonymousInteractions={anonymousInteractions}
       />
     </Layout>
   );

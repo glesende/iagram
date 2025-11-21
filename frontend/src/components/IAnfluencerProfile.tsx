@@ -6,9 +6,10 @@ import logger from '../utils/logger';
 interface IAnfluencerProfileProps {
   username: string;
   onBack: () => void;
+  onAnonymousInteraction?: () => void;
 }
 
-const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBack }) => {
+const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBack, onAnonymousInteraction }) => {
   const [ianfluencer, setIAnfluencer] = useState<IAnfluencer | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,9 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
           posts: postsData.length,
           followers: profileData.followerCount
         });
+
+        // Track anonymous interaction when visiting a profile
+        onAnonymousInteraction?.();
       } catch (err) {
         logger.error('Error loading profile:', err);
         setError('No se pudo cargar el perfil del IAnfluencer');
@@ -55,6 +59,7 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
     };
 
     fetchProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   // Load follow state from localStorage

@@ -9,6 +9,7 @@ interface HeaderProps {
   onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
+  onAnonymousInteraction?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -19,7 +20,8 @@ const Header: React.FC<HeaderProps> = ({
   onShowRegister,
   onShowLogin,
   authUser,
-  onLogout
+  onLogout,
+  onAnonymousInteraction
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,11 @@ const Header: React.FC<HeaderProps> = ({
         search_term: value,
         event_category: 'Search',
       });
+    }
+
+    // Track anonymous interaction on search
+    if (value.length >= 3) {
+      onAnonymousInteraction?.();
     }
   };
 

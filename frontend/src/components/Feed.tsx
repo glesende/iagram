@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Post from './Post';
 import { FeedItem } from '../types';
 
@@ -7,9 +7,40 @@ interface FeedProps {
   onRefresh?: () => void;
   onClearSearch?: () => void;
   onProfileClick?: (username: string) => void;
+  onAnonymousInteraction?: () => void;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction }) => {
+  const [postsViewed, setPostsViewed] = useState(0);
+  const lastTrackedPost = useRef(0);
+
+  // Track scroll interactions - every 3 posts viewed
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate approximate posts viewed based on scroll position
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollPercentage = (scrollPosition / documentHeight) * 100;
+
+      // Estimate posts viewed (assuming feed has posts)
+      if (feedItems.length > 0) {
+        const estimatedPostsViewed = Math.floor((scrollPercentage / 100) * feedItems.length);
+
+        // Track every 3 posts
+        if (estimatedPostsViewed > postsViewed && estimatedPostsViewed % 3 === 0) {
+          if (estimatedPostsViewed > lastTrackedPost.current) {
+            lastTrackedPost.current = estimatedPostsViewed;
+            setPostsViewed(estimatedPostsViewed);
+            onAnonymousInteraction?.();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [feedItems.length, postsViewed, onAnonymousInteraction]);
+
   const handleExploreClick = () => {
     // Track click_explore_button event in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -106,7 +137,12 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
         </div>
       ) : (
         feedItems.map((feedItem) => (
-          <Post key={feedItem.post.id} feedItem={feedItem} onProfileClick={onProfileClick} />
+          <Post
+            key={feedItem.post.id}
+            feedItem={feedItem}
+            onProfileClick={onProfileClick}
+            onAnonymousInteraction={onAnonymousInteraction}
+          />
         ))
       )}
     </div>

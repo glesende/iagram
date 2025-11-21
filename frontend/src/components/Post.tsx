@@ -7,9 +7,10 @@ import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/shar
 interface PostProps {
   feedItem: FeedItem;
   onProfileClick?: (username: string) => void;
+  onAnonymousInteraction?: () => void;
 }
 
-const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
+const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -288,6 +289,11 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
                   comments_count: comments.length,
                   event_category: 'Engagement',
                 });
+              }
+
+              // Track anonymous interaction when expanding comments
+              if (newShowComments) {
+                onAnonymousInteraction?.();
               }
             }} className="focus:outline-none" aria-label="Ver comentarios">
               <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

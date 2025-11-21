@@ -12,6 +12,7 @@ interface LayoutProps {
   authUser?: any;
   onLogout?: () => void;
   showHeader?: boolean;
+  onAnonymousInteraction?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -24,7 +25,8 @@ const Layout: React.FC<LayoutProps> = ({
   onShowLogin,
   authUser,
   onLogout,
-  showHeader = true
+  showHeader = true,
+  onAnonymousInteraction
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({
           onShowLogin={onShowLogin}
           authUser={authUser}
           onLogout={onLogout}
+          onAnonymousInteraction={onAnonymousInteraction}
         />
       )}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">
