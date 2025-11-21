@@ -9,6 +9,8 @@ interface HeaderProps {
   onShowLogin?: () => void;
   authUser?: any;
   onLogout?: () => void;
+  selectedNiche?: string | null;
+  onNicheSelect?: (niche: string | null) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -19,10 +21,23 @@ const Header: React.FC<HeaderProps> = ({
   onShowRegister,
   onShowLogin,
   authUser,
-  onLogout
+  onLogout,
+  selectedNiche,
+  onNicheSelect
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const nicheOptions = [
+    { value: null, label: 'Todos', icon: '🌐' },
+    { value: 'Tech', label: 'Tech', icon: '💻' },
+    { value: 'Fashion', label: 'Fashion', icon: '👗' },
+    { value: 'Food', label: 'Food', icon: '🍔' },
+    { value: 'Fitness', label: 'Fitness', icon: '💪' },
+    { value: 'Travel', label: 'Travel', icon: '✈️' },
+    { value: 'Art', label: 'Art', icon: '🎨' },
+    { value: 'Music', label: 'Music', icon: '🎵' },
+  ];
 
   // Sync internal state with external searchTerm prop
   useEffect(() => {
@@ -86,6 +101,24 @@ const Header: React.FC<HeaderProps> = ({
   const handleLogoutClick = () => {
     setShowUserMenu(false);
     onLogout?.();
+  };
+
+  const handleNicheSelect = (niche: string | null) => {
+    onNicheSelect?.(niche);
+
+    // Track niche filter selection in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      if (niche === null) {
+        (window as any).gtag('event', 'clear_niche_filter', {
+          event_category: 'Filter',
+        });
+      } else {
+        (window as any).gtag('event', 'filter_by_niche', {
+          niche: niche,
+          event_category: 'Filter',
+        });
+      }
+    }
   };
 
   return (
@@ -185,6 +218,27 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         </div>
+
+        {/* Niche Filter Row */}
+        {onNicheSelect && (
+          <div className="flex overflow-x-auto space-x-2 py-3 scrollbar-hide border-t border-gray-200">
+            {nicheOptions.map((niche) => (
+              <button
+                key={niche.label}
+                onClick={() => handleNicheSelect(niche.value)}
+                className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all flex items-center space-x-1 ${
+                  selectedNiche === niche.value
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-label={`Filtrar por ${niche.label}`}
+              >
+                <span>{niche.icon}</span>
+                <span>{niche.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </header>
   );

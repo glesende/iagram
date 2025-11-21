@@ -14,6 +14,7 @@ import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
 const AUTH_USER_KEY = 'iagram_auth_user';
+const SELECTED_NICHE_KEY = 'iagram_selected_niche';
 
 type View = 'landing' | 'feed' | 'profile' | 'register' | 'login';
 
@@ -23,6 +24,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNiche, setSelectedNiche] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<View>('feed');
   const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<any>(null);
@@ -31,12 +33,24 @@ function App() {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    filterFeedItems(feedItems, term);
+    filterFeedItems(feedItems, term, selectedNiche);
   };
 
   const handleClearSearch = () => {
     setSearchTerm('');
-    filterFeedItems(feedItems, '');
+    filterFeedItems(feedItems, '', selectedNiche);
+  };
+
+  const handleNicheSelect = (niche: string | null) => {
+    setSelectedNiche(niche);
+    filterFeedItems(feedItems, searchTerm, niche);
+
+    // Persist niche selection in localStorage
+    if (niche) {
+      localStorage.setItem(SELECTED_NICHE_KEY, niche);
+    } else {
+      localStorage.removeItem(SELECTED_NICHE_KEY);
+    }
   };
 
   const handleExploreFeed = () => {
@@ -71,6 +85,13 @@ function App() {
   };
 
   const handleBackToFeed = () => {
+    setCurrentView('feed');
+    setSelectedUsername(null);
+  };
+
+  const handleNicheClickFromProfile = (niche: string) => {
+    // Set the niche filter and navigate back to feed
+    handleNicheSelect(niche);
     setCurrentView('feed');
     setSelectedUsername(null);
   };
@@ -148,16 +169,23 @@ function App() {
     logger.log('User logged out');
   };
 
-  const filterFeedItems = (items: FeedItem[], term: string) => {
-    if (!term.trim()) {
-      setFilteredFeedItems(items);
-      return;
+  const filterFeedItems = (items: FeedItem[], term: string, niche: string | null) => {
+    let filtered = items;
+
+    // Filter by niche first
+    if (niche) {
+      filtered = filtered.filter(item =>
+        item.iAnfluencer.niche === niche
+      );
     }
 
-    const filtered = items.filter(item =>
-      item.iAnfluencer.username.toLowerCase().includes(term.toLowerCase()) ||
-      item.iAnfluencer.displayName.toLowerCase().includes(term.toLowerCase())
-    );
+    // Then filter by search term
+    if (term.trim()) {
+      filtered = filtered.filter(item =>
+        item.iAnfluencer.username.toLowerCase().includes(term.toLowerCase()) ||
+        item.iAnfluencer.displayName.toLowerCase().includes(term.toLowerCase())
+      );
+    }
 
     setFilteredFeedItems(filtered);
   };
@@ -239,6 +267,12 @@ function App() {
       setAuthUser(JSON.parse(storedUser));
     }
 
+    // Check for stored niche selection
+    const storedNiche = localStorage.getItem(SELECTED_NICHE_KEY);
+    if (storedNiche) {
+      setSelectedNiche(storedNiche);
+    }
+
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
@@ -247,10 +281,10 @@ function App() {
     fetchFeedData();
   }, []);
 
-  // Re-filter when feedItems change
+  // Re-filter when feedItems, searchTerm, or selectedNiche change
   useEffect(() => {
-    filterFeedItems(feedItems, searchTerm);
-  }, [feedItems, searchTerm]);
+    filterFeedItems(feedItems, searchTerm, selectedNiche);
+  }, [feedItems, searchTerm, selectedNiche]);
 
   // Show landing page if this is first visit
   if (currentView === 'landing') {
@@ -294,7 +328,11 @@ function App() {
   if (currentView === 'profile' && selectedUsername) {
     return (
       <Layout showHeader={false}>
-        <IAnfluencerProfile username={selectedUsername} onBack={handleBackToFeed} />
+        <IAnfluencerProfile
+          username={selectedUsername}
+          onBack={handleBackToFeed}
+          onNicheClick={handleNicheClickFromProfile}
+        />
       </Layout>
     );
   }
@@ -311,6 +349,8 @@ function App() {
         onShowLogin={handleShowLogin}
         authUser={authUser}
         onLogout={handleLogout}
+        selectedNiche={selectedNiche}
+        onNicheSelect={handleNicheSelect}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -329,6 +369,8 @@ function App() {
       onShowLogin={handleShowLogin}
       authUser={authUser}
       onLogout={handleLogout}
+      selectedNiche={selectedNiche}
+      onNicheSelect={handleNicheSelect}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
@@ -344,6 +386,8 @@ function App() {
         onRefresh={fetchFeedData}
         onClearSearch={handleClearSearch}
         onProfileClick={handleProfileClick}
+        selectedNiche={selectedNiche}
+        onClearNiche={() => handleNicheSelect(null)}
       />
     </Layout>
   );

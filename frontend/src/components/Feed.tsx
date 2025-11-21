@@ -7,9 +7,11 @@ interface FeedProps {
   onRefresh?: () => void;
   onClearSearch?: () => void;
   onProfileClick?: (username: string) => void;
+  selectedNiche?: string | null;
+  onClearNiche?: () => void;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, selectedNiche, onClearNiche }) => {
   const handleExploreClick = () => {
     // Track click_explore_button event in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -22,12 +24,52 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
     onClearSearch?.();
     onRefresh?.();
   };
+
+  const handleClearNicheFilter = () => {
+    onClearNiche?.();
+
+    // Track clear niche filter from empty state
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'clear_niche_filter_from_empty_state', {
+        niche: selectedNiche,
+        event_category: 'Filter',
+      });
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto py-6">
       {feedItems.length === 0 ? (
-        <div className="mx-4">
-          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
-            <div className="text-center">
+        selectedNiche ? (
+          // Empty state for niche filter with no results
+          <div className="mx-4">
+            <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
+              <div className="text-center">
+                <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  No hay IAnfluencers de {selectedNiche}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  No encontramos IAnfluencers en esta categoría todavía. Prueba con otra categoría o explora todo el contenido.
+                </p>
+                <button
+                  onClick={handleClearNicheFilter}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                >
+                  Ver todos los IAnfluencers
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Original empty state
+          <div className="mx-4">
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
+              <div className="text-center">
               {/* Iconos representando IA + Social */}
               <div className="flex justify-center space-x-4 mb-6">
                 <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center">
@@ -104,6 +146,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             </div>
           </div>
         </div>
+        )
       ) : (
         feedItems.map((feedItem) => (
           <Post key={feedItem.post.id} feedItem={feedItem} onProfileClick={onProfileClick} />

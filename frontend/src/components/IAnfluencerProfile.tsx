@@ -6,9 +6,10 @@ import logger from '../utils/logger';
 interface IAnfluencerProfileProps {
   username: string;
   onBack: () => void;
+  onNicheClick?: (niche: string) => void;
 }
 
-const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBack }) => {
+const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBack, onNicheClick }) => {
   const [ianfluencer, setIAnfluencer] = useState<IAnfluencer | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -219,9 +220,30 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({ username, onBac
         {/* Niche Badge */}
         {ianfluencer.niche && (
           <div className="mb-3">
-            <span className="inline-block px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-full">
+            <button
+              onClick={() => {
+                if (onNicheClick) {
+                  onNicheClick(ianfluencer.niche);
+
+                  // Track niche badge click in Google Analytics
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'niche_badge_click', {
+                      ianfluencer_username: ianfluencer.username,
+                      niche: ianfluencer.niche,
+                      source: 'profile',
+                      event_category: 'Navigation',
+                    });
+                  }
+                }
+              }}
+              className={`inline-block px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-full ${
+                onNicheClick ? 'hover:from-purple-600 hover:to-pink-600 cursor-pointer transition-all' : ''
+              }`}
+              disabled={!onNicheClick}
+              title={onNicheClick ? `Ver todos los IAnfluencers de ${ianfluencer.niche}` : undefined}
+            >
               {ianfluencer.niche}
-            </span>
+            </button>
           </div>
         )}
 
