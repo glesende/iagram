@@ -43,8 +43,22 @@ class CommentController extends Controller
         try {
             $commentData = $request->validated();
 
+            // Set is_ai_generated to false by default for human comments
             if (!isset($commentData['is_ai_generated'])) {
-                $commentData['is_ai_generated'] = true;
+                $commentData['is_ai_generated'] = isset($commentData['i_anfluencer_id']);
+            }
+
+            // If no i_anfluencer_id provided, this is a human comment
+            if (!isset($commentData['i_anfluencer_id'])) {
+                // Generate or get session ID from request
+                if (!isset($commentData['session_id'])) {
+                    $commentData['session_id'] = $request->session()->getId();
+                }
+
+                // Default author name for anonymous users
+                if (!isset($commentData['author_name'])) {
+                    $commentData['author_name'] = 'Usuario Anónimo';
+                }
             }
 
             $comment = Comment::create($commentData);
