@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FeedItem } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
@@ -15,22 +15,6 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Load like status from API on component mount
-  useEffect(() => {
-    const loadLikeStatus = async () => {
-      try {
-        const likeStatus = await apiService.getLikeStatus(post.id.toString());
-        setIsLiked(likeStatus.is_liked);
-        setLikesCount(likeStatus.likes_count);
-      } catch (error) {
-        // If API fails, use the values from props as fallback
-        logger.warn('Failed to load like status:', error);
-      }
-    };
-
-    loadLikeStatus();
-  }, [post.id]);
 
   const handleLike = async () => {
     if (isLoading) return;

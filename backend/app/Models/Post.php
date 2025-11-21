@@ -27,6 +27,8 @@ class Post extends Model
         'published_at' => 'datetime'
     ];
 
+    protected $appends = ['is_liked'];
+
     public function iAnfluencer()
     {
         return $this->belongsTo(IAnfluencer::class);
@@ -56,5 +58,17 @@ class Post extends Model
     public function getActualLikesCountAttribute()
     {
         return $this->likes()->count();
+    }
+
+    /**
+     * Get the is_liked attribute for the current user
+     */
+    public function getIsLikedAttribute()
+    {
+        $request = request();
+        $userId = $request->user() ? $request->user()->id : null;
+        $ipAddress = $request->ip();
+
+        return $this->isLikedBy($userId, null, $ipAddress);
     }
 }
