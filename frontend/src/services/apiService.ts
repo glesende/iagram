@@ -259,6 +259,40 @@ class ApiService {
     });
   }
 
+  // Follow/Unfollow IAnfluencers
+  async followIAnfluencer(id: string): Promise<{ success: boolean; followers_count: number }> {
+    const response = await this.fetchJson<ApiResponse<{ followers_count: number }>>(`/ianfluencers/${id}/follow`, {
+      method: 'POST'
+    });
+    return {
+      success: response.success,
+      followers_count: response.data.followers_count
+    };
+  }
+
+  async unfollowIAnfluencer(id: string): Promise<{ success: boolean; followers_count: number }> {
+    const response = await this.fetchJson<ApiResponse<{ followers_count: number }>>(`/ianfluencers/${id}/unfollow`, {
+      method: 'DELETE'
+    });
+    return {
+      success: response.success,
+      followers_count: response.data.followers_count
+    };
+  }
+
+  async getFollowStatus(id: string): Promise<{ is_following: boolean }> {
+    const response = await this.fetchJson<ApiResponse<{ is_following: boolean }>>(`/ianfluencers/${id}/follow-status`);
+    return response.data;
+  }
+
+  async getFollowingIAnfluencers(): Promise<IAnfluencer[]> {
+    const response = await this.fetchJson<ApiResponse<BackendIAnfluencer[]>>('/me/following');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch following IAnfluencers');
+    }
+    return response.data.map(mapBackendIAnfluencer);
+  }
+
   // Authentication methods
   async logout(): Promise<void> {
     try {
