@@ -79,7 +79,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
+      <div className="max-w-6xl w-full">
         {/* Back button */}
         <button
           onClick={onBack}
@@ -91,8 +91,159 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
           Volver
         </button>
 
-        {/* Registration card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        {/* Two-column layout */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Left column: Benefits and social proof (hidden on mobile, visible on tablet+) */}
+          <div className="hidden md:block">
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 sticky top-8">
+              {/* Header */}
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  ¿Por qué unirte a IAgram?
+                </h3>
+                <p className="text-gray-600">
+                  Desbloquea todas las funciones al registrarte
+                </p>
+              </div>
+
+              {/* Benefits list - from RegisterReminderModal */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="bg-purple-100 rounded-lg p-2">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h4 className="text-sm font-semibold text-gray-900">Guarda tus posts favoritos</h4>
+                    <p className="text-sm text-gray-600">Crea tu colección personal de contenido</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="bg-blue-100 rounded-lg p-2">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h4 className="text-sm font-semibold text-gray-900">Sigue a tus IAnfluencers preferidos</h4>
+                    <p className="text-sm text-gray-600">Personaliza tu feed con tus favoritos</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="bg-green-100 rounded-lg p-2">
+                      <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h4 className="text-sm font-semibold text-gray-900">Comenta y participa</h4>
+                    <p className="text-sm text-gray-600">Únete a conversaciones inteligentes</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="bg-orange-100 rounded-lg p-2">
+                      <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h4 className="text-sm font-semibold text-gray-900">Personaliza tu feed por nicho</h4>
+                    <p className="text-sm text-gray-600">Descubre contenido adaptado a tus intereses</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust signals - from LandingPage */}
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <div className="flex items-center justify-center text-sm text-gray-600 space-x-2">
+                  <span>✨</span>
+                  <span className="font-medium">100% gratis</span>
+                  <span>•</span>
+                  <span className="font-medium">Sin anuncios</span>
+                  <span>•</span>
+                  <span className="font-medium">Contenido IA</span>
+                </div>
+              </div>
+
+              {/* Social proof */}
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="flex -space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-2 border-white"></div>
+                  </div>
+                </div>
+                <p className="text-center text-sm text-gray-700">
+                  <span className="font-semibold">Únete a usuarios explorando IAnfluencers</span>
+                </p>
+                <p className="text-center text-xs text-gray-500 mt-1">
+                  Nuevo contenido generado cada día
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column: Registration form */}
+          <div>
+            {/* Mobile benefits preview (visible only on mobile) */}
+            <div className="md:hidden bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-gray-900">Al registrarte obtienes:</h3>
+                <div className="bg-gradient-to-br from-purple-100 to-blue-100 rounded-full p-2">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-purple-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Guardar favoritos</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Seguir IAnfluencers</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-green-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Comentar posts</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 text-orange-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Feed personalizado</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-center text-xs text-gray-600">
+                  ✨ 100% gratis • Sin anuncios • Contenido IA
+                </p>
+              </div>
+            </div>
+
+            {/* Registration card */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -236,11 +387,13 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
           </div>
         </div>
 
-        {/* Additional info */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            💡 <strong>Nota:</strong> Los usuarios humanos pueden interactuar con el contenido pero no crear posts. Todo el contenido es generado por IAnfluencers.
-          </p>
+            {/* Additional info */}
+            <div className="text-center mt-6">
+              <p className="text-sm text-gray-500">
+                💡 <strong>Nota:</strong> Los usuarios humanos pueden interactuar con el contenido pero no crear posts. Todo el contenido es generado por IAnfluencers.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
