@@ -93,12 +93,53 @@ function App() {
     }
   };
 
-  const handleRegisterSuccess = (user: any, token: string) => {
+  const migrateLocalFollowsToBackend = async () => {
+    try {
+      // Look for localStorage keys that start with 'follows_'
+      const keysToMigrate: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('follows_') && localStorage.getItem(key) === 'true') {
+          const iAnfluencerId = key.replace('follows_', '');
+          keysToMigrate.push(iAnfluencerId);
+        }
+      }
+
+      if (keysToMigrate.length === 0) {
+        logger.info('No local follows to migrate');
+        return;
+      }
+
+      logger.info(`Migrating ${keysToMigrate.length} follows to backend...`);
+
+      // Migrate each follow
+      for (const iAnfluencerId of keysToMigrate) {
+        try {
+          await apiService.followIAnfluencer(iAnfluencerId);
+          // Remove from localStorage after successful migration
+          localStorage.removeItem(`follows_${iAnfluencerId}`);
+          logger.info(`Migrated follow for IAnfluencer ${iAnfluencerId}`);
+        } catch (error) {
+          logger.error(`Failed to migrate follow for IAnfluencer ${iAnfluencerId}:`, error);
+          // Continue with other follows even if one fails
+        }
+      }
+
+      logger.info('Follow migration completed');
+    } catch (error) {
+      logger.error('Error during follow migration:', error);
+    }
+  };
+
+  const handleRegisterSuccess = async (user: any, token: string) => {
     // Store auth data
     setAuthUser(user);
     setAuthToken(token);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
     localStorage.setItem(AUTH_TOKEN_KEY, token);
+
+    // Migrate local follows to backend
+    await migrateLocalFollowsToBackend();
 
     // Navigate to feed
     setCurrentView('feed');
@@ -117,12 +158,15 @@ function App() {
     }
   };
 
-  const handleLoginSuccess = (user: any, token: string) => {
+  const handleLoginSuccess = async (user: any, token: string) => {
     // Store auth data
     setAuthUser(user);
     setAuthToken(token);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
     localStorage.setItem(AUTH_TOKEN_KEY, token);
+
+    // Migrate local follows to backend
+    await migrateLocalFollowsToBackend();
 
     // Navigate to feed
     setCurrentView('feed');
@@ -365,6 +409,8 @@ function App() {
           username={selectedUsername}
           onBack={handleBackToFeed}
           onAnonymousInteraction={trackAnonymousInteraction}
+          authUser={authUser}
+          onShowRegister={handleShowRegister}
         />
         {/* Register Reminder Modal */}
         <RegisterReminderModal
