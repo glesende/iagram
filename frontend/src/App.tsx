@@ -482,6 +482,7 @@ function App() {
         onClearSearch={handleClearSearch}
         onProfileClick={handleProfileClick}
         onAnonymousInteraction={trackAnonymousInteraction}
+        authUser={authUser}
       />
       {/* Register Reminder Modal */}
       <RegisterReminderModal

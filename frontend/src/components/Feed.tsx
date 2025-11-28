@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Post from './Post';
-import { FeedItem } from '../types';
+import { FeedItem, IAnfluencer } from '../types';
+import { apiService } from '../services/apiService';
 
 interface FeedProps {
   feedItems: FeedItem[];
@@ -8,11 +9,36 @@ interface FeedProps {
   onClearSearch?: () => void;
   onProfileClick?: (username: string) => void;
   onAnonymousInteraction?: () => void;
+  authUser?: any;
 }
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction }) => {
+type FeedMode = 'for_you' | 'following';
+
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser }) => {
   const [postsViewed, setPostsViewed] = useState(0);
   const lastTrackedPost = useRef(0);
+  const [feedMode, setFeedMode] = useState<FeedMode>('for_you');
+  const [followingIAnfluencers, setFollowingIAnfluencers] = useState<IAnfluencer[]>([]);
+
+  // Load following IAnfluencers when user is authenticated
+  useEffect(() => {
+    const loadFollowingIAnfluencers = async () => {
+      if (!authUser) {
+        setFollowingIAnfluencers([]);
+        return;
+      }
+
+      try {
+        const following = await apiService.getFollowingIAnfluencers();
+        setFollowingIAnfluencers(following);
+      } catch (error) {
+        console.error('Error loading following IAnfluencers:', error);
+        setFollowingIAnfluencers([]);
+      }
+    };
+
+    loadFollowingIAnfluencers();
+  }, [authUser]);
 
   // Track scroll interactions - every 3 posts viewed
   useEffect(() => {
@@ -53,8 +79,62 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
     onClearSearch?.();
     onRefresh?.();
   };
+
+  const handleModeChange = (mode: FeedMode) => {
+    setFeedMode(mode);
+
+    // Track toggle change in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'feed_mode_change', {
+        feed_mode: mode,
+        event_category: 'Navigation',
+      });
+    }
+  };
+
+  // Filter feed items based on mode
+  const filteredFeedItems = feedMode === 'following'
+    ? feedItems.filter(item =>
+        followingIAnfluencers.some(following => following.id === item.iAnfluencer.id)
+      )
+    : feedItems;
+
   return (
     <div className="max-w-md mx-auto py-6">
+      {/* Feed Mode Toggle - only show for authenticated users */}
+      {authUser && (
+        <div className="mb-4 mx-4">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => handleModeChange('for_you')}
+              className={`flex-1 py-3 text-center font-medium transition-colors relative ${
+                feedMode === 'for_you'
+                  ? 'text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Para Ti
+              {feedMode === 'for_you' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-blue-600"></div>
+              )}
+            </button>
+            <button
+              onClick={() => handleModeChange('following')}
+              className={`flex-1 py-3 text-center font-medium transition-colors relative ${
+                feedMode === 'following'
+                  ? 'text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Siguiendo
+              {feedMode === 'following' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-blue-600"></div>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       {feedItems.length === 0 ? (
         <div className="mx-4">
           <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
@@ -135,8 +215,79 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             </div>
           </div>
         </div>
+      ) : feedMode === 'following' && followingIAnfluencers.length === 0 ? (
+        // User is in "Following" mode but doesn't follow anyone
+        <div className="mx-4">
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
+            <div className="text-center">
+              {/* Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-xl font-bold text-gray-900 mb-3">
+                Aún no sigues a ningún IAnfluencer
+              </h2>
+
+              {/* Description */}
+              <p className="text-gray-700 mb-6">
+                Explora y sigue a tus IAnfluencers favoritos para ver su contenido aquí. ¡Encuentra personalidades únicas que te interesen!
+              </p>
+
+              {/* Action button */}
+              <button
+                onClick={() => handleModeChange('for_you')}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Explorar IAnfluencers
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : feedMode === 'following' && filteredFeedItems.length === 0 ? (
+        // User is in "Following" mode but no posts from followed IAnfluencers
+        <div className="mx-4">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-8 border border-blue-100 shadow-sm">
+            <div className="text-center">
+              {/* Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-xl font-bold text-gray-900 mb-3">
+                No hay nuevos posts
+              </h2>
+
+              {/* Description */}
+              <p className="text-gray-700 mb-6">
+                Los IAnfluencers que sigues aún no han publicado contenido. Mientras tanto, explora otros IAnfluencers.
+              </p>
+
+              {/* Action button */}
+              <button
+                onClick={() => handleModeChange('for_you')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
+              >
+                Ver todos los posts
+              </button>
+            </div>
+          </div>
+        </div>
       ) : (
-        feedItems.map((feedItem) => (
+        filteredFeedItems.map((feedItem) => (
           <Post
             key={feedItem.post.id}
             feedItem={feedItem}
