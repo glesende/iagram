@@ -5,6 +5,8 @@ import LandingPage from './components/LandingPage';
 import IAnfluencerProfile from './components/IAnfluencerProfile';
 import Register from './components/Register';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import SavedPostsView from './components/SavedPostsView';
 import RegisterReminderModal from './components/RegisterReminderModal';
 import { getMockFeedItems } from './services/mockData';
@@ -20,7 +22,7 @@ const ANONYMOUS_INTERACTIONS_KEY = 'iagram_anonymous_interactions';
 const REMINDER_SHOWN_COUNT_KEY = 'reminder_shown_count';
 const INTERACTION_THRESHOLD = 5;
 
-type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -156,6 +158,21 @@ function App() {
         event_category: 'Authentication',
       });
     }
+  };
+
+  const handleShowForgotPassword = () => {
+    setCurrentView('forgot-password');
+
+    // Track forgot password page view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_forgot_password', {
+        event_category: 'Authentication',
+      });
+    }
+  };
+
+  const handleShowResetPassword = () => {
+    setCurrentView('reset-password');
   };
 
   const handleLoginSuccess = async (user: any, token: string) => {
@@ -350,6 +367,13 @@ function App() {
       setAnonymousInteractions(parseInt(storedInteractions));
     }
 
+    // Check if we're on the reset-password URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token') && urlParams.get('email')) {
+      setCurrentView('reset-password');
+      return;
+    }
+
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
@@ -396,7 +420,26 @@ function App() {
           onBack={handleShowLanding}
           onLoginSuccess={handleLoginSuccess}
           onGoToRegister={handleShowRegister}
+          onGoToForgotPassword={handleShowForgotPassword}
         />
+      </Layout>
+    );
+  }
+
+  // Show forgot password page
+  if (currentView === 'forgot-password') {
+    return (
+      <Layout showHeader={false}>
+        <ForgotPassword onBack={handleShowLogin} />
+      </Layout>
+    );
+  }
+
+  // Show reset password page
+  if (currentView === 'reset-password') {
+    return (
+      <Layout showHeader={false}>
+        <ResetPassword onBack={handleShowLogin} onGoToForgotPassword={handleShowForgotPassword} />
       </Layout>
     );
   }
