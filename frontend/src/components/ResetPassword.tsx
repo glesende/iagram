@@ -59,7 +59,8 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onBack, onGoToForgotPassw
 
   const verifyToken = async (tokenParam: string, emailParam: string) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/password/verify-token`, {
+      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseUrl}/api/password/verify-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +112,8 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ onBack, onGoToForgotPassw
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/password/reset`, {
+      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseUrl}/api/password/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
