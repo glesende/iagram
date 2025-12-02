@@ -4,9 +4,10 @@ interface LoginProps {
   onBack: () => void;
   onLoginSuccess: (user: any, token: string) => void;
   onGoToRegister: () => void;
+  onGoToForgotPassword?: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onBack, onLoginSuccess, onGoToRegister }) => {
+const Login: React.FC<LoginProps> = ({ onBack, onLoginSuccess, onGoToRegister, onGoToForgotPassword }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -166,6 +167,19 @@ const Login: React.FC<LoginProps> = ({ onBack, onLoginSuccess, onGoToRegister })
                 <p className="mt-1 text-sm text-red-600">{errors.password[0]}</p>
               )}
             </div>
+
+            {/* Forgot password link */}
+            {onGoToForgotPassword && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={onGoToForgotPassword}
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            )}
 
             {/* Submit button */}
             <button
