@@ -64,14 +64,47 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
       } else {
         // Handle validation errors
         if (data.errors) {
+          // Track validation errors in Google Analytics
+          if (typeof window !== 'undefined' && (window as any).gtag) {
+            Object.keys(data.errors).forEach((fieldName) => {
+              const errorMessage = data.errors[fieldName][0];
+
+              // Track specific field error event
+              (window as any).gtag('event', `registration_error_${fieldName}`, {
+                error_message: errorMessage,
+                field_name: fieldName,
+                event_category: 'Registration',
+              });
+            });
+          }
+
           setErrors(data.errors);
         } else {
-          setGeneralError(data.message || 'Error al registrar usuario');
+          // Track general error
+          const errorMessage = data.message || 'Error al registrar usuario';
+          if (typeof window !== 'undefined' && (window as any).gtag) {
+            (window as any).gtag('event', 'registration_general_error', {
+              error_message: errorMessage,
+              event_category: 'Registration',
+            });
+          }
+
+          setGeneralError(errorMessage);
         }
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setGeneralError('Error de conexión. Por favor, intenta de nuevo.');
+      const errorMessage = 'Error de conexión. Por favor, intenta de nuevo.';
+
+      // Track connection error
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'registration_connection_error', {
+          error_message: errorMessage,
+          event_category: 'Registration',
+        });
+      }
+
+      setGeneralError(errorMessage);
     } finally {
       setLoading(false);
     }
