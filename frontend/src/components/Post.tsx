@@ -4,14 +4,16 @@ import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
 import { savePost, unsavePost, isPostSaved } from '../utils/savedPosts';
+import { usePostVisibility } from '../hooks/usePostVisibility';
 
 interface PostProps {
   feedItem: FeedItem;
   onProfileClick?: (username: string) => void;
   onAnonymousInteraction?: () => void;
+  onPostViewed?: () => void;
 }
 
-const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction }) => {
+const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction, onPostViewed }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -22,6 +24,25 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [localComments, setLocalComments] = useState(comments);
   const [commentsCount, setCommentsCount] = useState(comments.length);
+
+  // Track post visibility to increment view counter
+  const { ref: postRef } = usePostVisibility({
+    onViewed: () => {
+      onPostViewed?.();
+
+      // Track post view in Google Analytics
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'post_view', {
+          post_id: post.id,
+          ianfluencer_username: iAnfluencer.username,
+          niche: iAnfluencer.niche,
+          event_category: 'Engagement',
+        });
+      }
+    },
+    threshold: 0.5, // 50% del post debe ser visible
+    minViewDuration: 1000 // Debe estar visible por al menos 1 segundo
+  });
 
   const handleLike = async () => {
     if (isLoading) return;
@@ -313,7 +334,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   };
 
   return (
-    <article className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
+    <article ref={postRef as React.RefObject<HTMLElement>} className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center p-4">
         <button

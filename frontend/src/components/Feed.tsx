@@ -10,11 +10,12 @@ interface FeedProps {
   onProfileClick?: (username: string) => void;
   onAnonymousInteraction?: () => void;
   authUser?: any;
+  onPostViewed?: () => void;
 }
 
 type FeedMode = 'for_you' | 'following';
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser, onPostViewed }) => {
   const [postsViewed, setPostsViewed] = useState(0);
   const lastTrackedPost = useRef(0);
   const [feedMode, setFeedMode] = useState<FeedMode>('for_you');
@@ -293,6 +294,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             feedItem={feedItem}
             onProfileClick={onProfileClick}
             onAnonymousInteraction={onAnonymousInteraction}
+            onPostViewed={onPostViewed}
           />
         ))
       )}

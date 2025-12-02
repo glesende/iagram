@@ -14,6 +14,7 @@ interface LayoutProps {
   onShowSavedPosts?: () => void;
   showHeader?: boolean;
   onAnonymousInteraction?: () => void;
+  viewCount?: number;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -28,7 +29,8 @@ const Layout: React.FC<LayoutProps> = ({
   onLogout,
   onShowSavedPosts,
   showHeader = true,
-  onAnonymousInteraction
+  onAnonymousInteraction,
+  viewCount
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,6 +46,7 @@ const Layout: React.FC<LayoutProps> = ({
           onLogout={onLogout}
           onShowSavedPosts={onShowSavedPosts}
           onAnonymousInteraction={onAnonymousInteraction}
+          viewCount={viewCount}
         />
       )}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">

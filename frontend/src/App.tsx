@@ -14,6 +14,7 @@ import { apiService } from './services/apiService';
 import { FeedItem } from './types';
 import logger from './utils/logger';
 import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
+import { usePostViewCounter } from './hooks/usePostViewCounter';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
@@ -37,6 +38,9 @@ function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [anonymousInteractions, setAnonymousInteractions] = useState(0);
   const [showReminderModal, setShowReminderModal] = useState(false);
+
+  // Post view counter
+  const { viewCount, incrementViewCount } = usePostViewCounter();
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -489,6 +493,7 @@ function App() {
         onLogout={handleLogout}
         onShowSavedPosts={handleShowSavedPosts}
         onAnonymousInteraction={trackAnonymousInteraction}
+        viewCount={viewCount}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -509,6 +514,7 @@ function App() {
       onLogout={handleLogout}
       onShowSavedPosts={handleShowSavedPosts}
       onAnonymousInteraction={trackAnonymousInteraction}
+      viewCount={viewCount}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
@@ -526,6 +532,7 @@ function App() {
         onProfileClick={handleProfileClick}
         onAnonymousInteraction={trackAnonymousInteraction}
         authUser={authUser}
+        onPostViewed={incrementViewCount}
       />
       {/* Register Reminder Modal */}
       <RegisterReminderModal
