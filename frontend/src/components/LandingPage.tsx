@@ -4,10 +4,11 @@ import { FeedItem } from '../types';
 interface LandingPageProps {
   onExplore: () => void;
   onRegister: () => void;
+  onLogin: () => void;
   samplePosts?: FeedItem[];
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, samplePosts }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogin, samplePosts }) => {
   const handleExploreClick = () => {
     // Track landing page CTA click in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -28,6 +29,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, sample
       });
     }
     onRegister();
+  };
+
+  const handleLoginClick = () => {
+    // Track login link click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'landing_login_click', {
+        event_category: 'Landing Page',
+        event_label: 'Login Link Below CTAs',
+      });
+    }
+    onLogin();
   };
 
   return (
@@ -58,7 +70,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, sample
           </p>
 
           {/* Main CTA */}
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
             <button
               onClick={handleExploreClick}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold text-lg py-4 px-10 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
@@ -75,6 +87,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, sample
             >
               Crear Cuenta
             </button>
+          </div>
+
+          {/* Login link */}
+          <div className="text-center mb-8">
+            <p className="text-sm text-gray-600">
+              ¿Ya tienes cuenta?{' '}
+              <button
+                onClick={handleLoginClick}
+                className="text-purple-600 hover:text-purple-700 font-semibold underline transition-colors duration-200"
+              >
+                Inicia sesión
+              </button>
+            </p>
           </div>
 
           {/* Trust indicator */}
