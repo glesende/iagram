@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header';
+import EmailVerificationBanner from './EmailVerificationBanner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -43,23 +44,26 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen bg-gray-50">
       {showHeader && (
-        <Header
-          onSearch={onSearch}
-          searchTerm={searchTerm}
-          onClearSearch={onClearSearch}
-          onShowLanding={onShowLanding}
-          onShowRegister={onShowRegister}
-          onShowLogin={onShowLogin}
-          authUser={authUser}
-          onLogout={onLogout}
-          onShowSavedPosts={onShowSavedPosts}
-          onAnonymousInteraction={onAnonymousInteraction}
-          viewCount={viewCount}
-          selectedNiches={selectedNiches}
-          onNicheToggle={onNicheToggle}
-          onClearNicheFilters={onClearNicheFilters}
-          availableNiches={availableNiches}
-        />
+        <>
+          <Header
+            onSearch={onSearch}
+            searchTerm={searchTerm}
+            onClearSearch={onClearSearch}
+            onShowLanding={onShowLanding}
+            onShowRegister={onShowRegister}
+            onShowLogin={onShowLogin}
+            authUser={authUser}
+            onLogout={onLogout}
+            onShowSavedPosts={onShowSavedPosts}
+            onAnonymousInteraction={onAnonymousInteraction}
+            viewCount={viewCount}
+            selectedNiches={selectedNiches}
+            onNicheToggle={onNicheToggle}
+            onClearNicheFilters={onClearNicheFilters}
+            availableNiches={availableNiches}
+          />
+          <EmailVerificationBanner authUser={authUser} />
+        </>
       )}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">
         {children}
