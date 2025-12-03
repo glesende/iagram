@@ -394,6 +394,7 @@ function App() {
         <LandingPage
           onExplore={handleExploreFeed}
           onRegister={handleShowRegister}
+          onLogin={handleShowLogin}
           samplePosts={loading ? undefined : feedItems.slice(0, 3)}
         />
       </Layout>
