@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSavedPostsCount } from '../utils/savedPosts';
+import ViewCounter from './ViewCounter';
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
@@ -12,6 +13,7 @@ interface HeaderProps {
   onLogout?: () => void;
   onShowSavedPosts?: () => void;
   onAnonymousInteraction?: () => void;
+  viewCount?: number;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -24,7 +26,8 @@ const Header: React.FC<HeaderProps> = ({
   authUser,
   onLogout,
   onShowSavedPosts,
-  onAnonymousInteraction
+  onAnonymousInteraction,
+  viewCount = 0
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -158,7 +161,7 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
@@ -174,6 +177,9 @@ const Header: React.FC<HeaderProps> = ({
                 </svg>
               </div>
             </form>
+
+            {/* View Counter */}
+            <ViewCounter count={viewCount} />
 
             {/* Favoritos button */}
             {onShowSavedPosts && (
