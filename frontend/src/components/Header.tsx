@@ -12,6 +12,10 @@ interface HeaderProps {
   onLogout?: () => void;
   onShowSavedPosts?: () => void;
   onAnonymousInteraction?: () => void;
+  selectedNiches?: string[];
+  onNicheToggle?: (niche: string) => void;
+  onClearNicheFilters?: () => void;
+  availableNiches?: string[];
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -24,7 +28,11 @@ const Header: React.FC<HeaderProps> = ({
   authUser,
   onLogout,
   onShowSavedPosts,
-  onAnonymousInteraction
+  onAnonymousInteraction,
+  selectedNiches = [],
+  onNicheToggle,
+  onClearNicheFilters,
+  availableNiches = []
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -136,6 +144,23 @@ const Header: React.FC<HeaderProps> = ({
       });
     }
     onShowSavedPosts?.();
+  };
+
+  const handleNicheClick = (niche: string) => {
+    onNicheToggle?.(niche);
+
+    // Track anonymous interaction on niche filter
+    onAnonymousInteraction?.();
+  };
+
+  // Define niche labels with emojis for better UX
+  const nicheLabels: Record<string, string> = {
+    'lifestyle': 'Lifestyle',
+    'fashion': 'Moda',
+    'fitness': 'Fitness',
+    'food': 'Comida',
+    'travel': 'Viajes',
+    'technology': 'Tecnología'
   };
 
   return (
@@ -254,6 +279,47 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         </div>
+
+        {/* Niche Filter Chips */}
+        {availableNiches.length > 0 && (
+          <div className="py-3 border-t border-gray-200">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              {/* Clear filters button */}
+              {selectedNiches.length > 0 && (
+                <button
+                  onClick={onClearNicheFilters}
+                  className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors flex items-center gap-1"
+                  aria-label="Limpiar filtros"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Limpiar
+                </button>
+              )}
+
+              {/* Niche chips */}
+              {availableNiches.map((niche) => {
+                const isSelected = selectedNiches.includes(niche);
+                return (
+                  <button
+                    key={niche}
+                    onClick={() => handleNicheClick(niche)}
+                    className={`flex-shrink-0 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 transform hover:scale-105 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    aria-label={`Filtrar por ${nicheLabels[niche] || niche}`}
+                    aria-pressed={isSelected}
+                  >
+                    {nicheLabels[niche] || niche}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

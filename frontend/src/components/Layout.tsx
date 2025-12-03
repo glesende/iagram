@@ -14,6 +14,10 @@ interface LayoutProps {
   onShowSavedPosts?: () => void;
   showHeader?: boolean;
   onAnonymousInteraction?: () => void;
+  selectedNiches?: string[];
+  onNicheToggle?: (niche: string) => void;
+  onClearNicheFilters?: () => void;
+  availableNiches?: string[];
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -28,7 +32,11 @@ const Layout: React.FC<LayoutProps> = ({
   onLogout,
   onShowSavedPosts,
   showHeader = true,
-  onAnonymousInteraction
+  onAnonymousInteraction,
+  selectedNiches,
+  onNicheToggle,
+  onClearNicheFilters,
+  availableNiches
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,6 +52,10 @@ const Layout: React.FC<LayoutProps> = ({
           onLogout={onLogout}
           onShowSavedPosts={onShowSavedPosts}
           onAnonymousInteraction={onAnonymousInteraction}
+          selectedNiches={selectedNiches}
+          onNicheToggle={onNicheToggle}
+          onClearNicheFilters={onClearNicheFilters}
+          availableNiches={availableNiches}
         />
       )}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">
