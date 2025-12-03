@@ -48,15 +48,23 @@ Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer'
 Route::get('posts/influencer/{username}', [PostController::class, 'getByIAnfluencerUsername']);
 Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
 
-// Likes functionality
-Route::post('posts/{id}/like', [PostController::class, 'like']);
-Route::delete('posts/{id}/unlike', [PostController::class, 'unlike']);
-Route::get('posts/{id}/like-status', [PostController::class, 'getLikeStatus']);
+// Likes functionality - require authentication and email verification
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('posts/{id}/like', [PostController::class, 'like']);
+    Route::delete('posts/{id}/unlike', [PostController::class, 'unlike']);
+});
 
-// Follow functionality - require authentication
-Route::middleware('auth:sanctum')->group(function () {
+// Like status - require authentication only (no verification needed for viewing)
+Route::middleware('auth:sanctum')->get('posts/{id}/like-status', [PostController::class, 'getLikeStatus']);
+
+// Follow functionality - require authentication and email verification
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('ianfluencers/{id}/follow', [IAnfluencerController::class, 'follow']);
     Route::delete('ianfluencers/{id}/unfollow', [IAnfluencerController::class, 'unfollow']);
+});
+
+// Follow status - require authentication only (no verification needed for viewing)
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('ianfluencers/{id}/follow-status', [IAnfluencerController::class, 'getFollowStatus']);
     Route::get('me/following', [IAnfluencerController::class, 'getFollowing']);
 });
