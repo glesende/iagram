@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import EmailVerificationPending from './EmailVerificationPending';
 
 interface RegisterProps {
   onBack: () => void;
@@ -15,6 +16,8 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
   const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
+  const [showVerificationPending, setShowVerificationPending] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,10 +61,20 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
             method: 'email',
             event_category: 'Authentication',
           });
+
+          // Track email sent event
+          (window as any).gtag('event', 'email_verification_sent', {
+            event_category: 'Authentication',
+          });
         }
 
-        // Call success handler with user data and token
-        onRegisterSuccess(data.data.user, data.data.access_token);
+        // Store registered email and show verification pending screen
+        setRegisteredEmail(formData.email);
+        setShowVerificationPending(true);
+
+        // Store user data and token for later use
+        localStorage.setItem('iagram_auth_token', data.data.access_token);
+        localStorage.setItem('iagram_auth_user', JSON.stringify(data.data.user));
       } else {
         // Handle validation errors
         if (data.errors) {
@@ -110,6 +123,11 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
       setLoading(false);
     }
   };
+
+  // Show verification pending screen if registration was successful
+  if (showVerificationPending) {
+    return <EmailVerificationPending email={registeredEmail} onBack={onBack} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
