@@ -31,6 +31,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
   const [currentView, setCurrentView] = useState<View>('feed');
   const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<any>(null);
@@ -44,12 +45,43 @@ function App() {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    filterFeedItems(feedItems, term);
+    filterFeedItems(feedItems, term, selectedNiches);
   };
 
   const handleClearSearch = () => {
     setSearchTerm('');
-    filterFeedItems(feedItems, '');
+    filterFeedItems(feedItems, '', selectedNiches);
+  };
+
+  const handleNicheToggle = (niche: string) => {
+    const newSelectedNiches = selectedNiches.includes(niche)
+      ? selectedNiches.filter(n => n !== niche)
+      : [...selectedNiches, niche];
+
+    setSelectedNiches(newSelectedNiches);
+    filterFeedItems(feedItems, searchTerm, newSelectedNiches);
+
+    // Track niche filter in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'niche_filter_toggle', {
+        niche: niche,
+        action: selectedNiches.includes(niche) ? 'remove' : 'add',
+        active_filters: newSelectedNiches.length,
+        event_category: 'Filter',
+      });
+    }
+  };
+
+  const handleClearNicheFilters = () => {
+    setSelectedNiches([]);
+    filterFeedItems(feedItems, searchTerm, []);
+
+    // Track clear filters in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'niche_filters_cleared', {
+        event_category: 'Filter',
+      });
+    }
   };
 
   const handleExploreFeed = () => {
@@ -274,16 +306,23 @@ function App() {
     handleShowRegister();
   };
 
-  const filterFeedItems = (items: FeedItem[], term: string) => {
-    if (!term.trim()) {
-      setFilteredFeedItems(items);
-      return;
+  const filterFeedItems = (items: FeedItem[], term: string, niches: string[]) => {
+    let filtered = items;
+
+    // Apply search term filter
+    if (term.trim()) {
+      filtered = filtered.filter(item =>
+        item.iAnfluencer.username.toLowerCase().includes(term.toLowerCase()) ||
+        item.iAnfluencer.displayName.toLowerCase().includes(term.toLowerCase())
+      );
     }
 
-    const filtered = items.filter(item =>
-      item.iAnfluencer.username.toLowerCase().includes(term.toLowerCase()) ||
-      item.iAnfluencer.displayName.toLowerCase().includes(term.toLowerCase())
-    );
+    // Apply niche filter
+    if (niches.length > 0) {
+      filtered = filtered.filter(item =>
+        niches.includes(item.iAnfluencer.niche)
+      );
+    }
 
     setFilteredFeedItems(filtered);
   };
@@ -386,10 +425,21 @@ function App() {
     fetchFeedData();
   }, []);
 
-  // Re-filter when feedItems change
+  // Re-filter when feedItems, searchTerm, or selectedNiches change
   useEffect(() => {
-    filterFeedItems(feedItems, searchTerm);
-  }, [feedItems, searchTerm]);
+    filterFeedItems(feedItems, searchTerm, selectedNiches);
+  }, [feedItems, searchTerm, selectedNiches]);
+
+  // Calculate available niches from all feed items
+  const availableNiches = React.useMemo(() => {
+    const niches = new Set<string>();
+    feedItems.forEach(item => {
+      if (item.iAnfluencer.niche) {
+        niches.add(item.iAnfluencer.niche);
+      }
+    });
+    return Array.from(niches).sort();
+  }, [feedItems]);
 
   // Show landing page if this is first visit
   if (currentView === 'landing') {
@@ -495,6 +545,10 @@ function App() {
         onShowSavedPosts={handleShowSavedPosts}
         onAnonymousInteraction={trackAnonymousInteraction}
         viewCount={viewCount}
+        selectedNiches={selectedNiches}
+        onNicheToggle={handleNicheToggle}
+        onClearNicheFilters={handleClearNicheFilters}
+        availableNiches={availableNiches}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -516,6 +570,10 @@ function App() {
       onShowSavedPosts={handleShowSavedPosts}
       onAnonymousInteraction={trackAnonymousInteraction}
       viewCount={viewCount}
+      selectedNiches={selectedNiches}
+      onNicheToggle={handleNicheToggle}
+      onClearNicheFilters={handleClearNicheFilters}
+      availableNiches={availableNiches}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
