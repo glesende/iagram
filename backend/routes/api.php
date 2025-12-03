@@ -25,6 +25,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 
+// Email verification routes
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
+Route::middleware('auth:sanctum')->post('/email/resend', [AuthController::class, 'resendVerificationEmail'])->name('verification.resend');
+Route::middleware('auth:sanctum')->get('/email/verification-status', [AuthController::class, 'checkVerificationStatus']);
+
 // Password reset routes
 Route::post('/password/forgot', [PasswordResetController::class, 'sendResetLink']);
 Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
