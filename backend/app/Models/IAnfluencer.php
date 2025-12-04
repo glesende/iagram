@@ -37,4 +37,12 @@ class IAnfluencer extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    /**
+     * Get the followers (users following this IAnfluencer)
+     */
+    public function followers()
+    {
+        return $this->hasMany(Follow::class, 'i_anfluencer_id');
+    }
 }

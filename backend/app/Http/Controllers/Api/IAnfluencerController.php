@@ -7,6 +7,7 @@ use App\Http\Requests\StoreIAnfluencerRequest;
 use App\Http\Requests\UpdateIAnfluencerRequest;
 use App\Models\IAnfluencer;
 use App\Models\Follow;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -228,6 +229,9 @@ class IAnfluencerController extends Controller
             // Increment followers count
             $iAnfluencer->increment('followers_count');
             $iAnfluencer->refresh();
+
+            // Generate notification for the IAnfluencer owner
+            NotificationService::notifyFollow($iAnfluencer->id, $user->id);
 
             return response()->json([
                 'success' => true,

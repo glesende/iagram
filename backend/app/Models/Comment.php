@@ -11,6 +11,7 @@ class Comment extends Model
 
     protected $fillable = [
         'post_id',
+        'user_id',
         'i_anfluencer_id',
         'session_id',
         'author_name',
@@ -33,5 +34,10 @@ class Comment extends Model
     public function iAnfluencer()
     {
         return $this->belongsTo(IAnfluencer::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

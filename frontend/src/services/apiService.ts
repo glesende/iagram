@@ -1,4 +1,4 @@
-import { IAnfluencer, Post, Comment, FeedItem } from '../types';
+import { IAnfluencer, Post, Comment, FeedItem, Notification, NotificationSettings } from '../types';
 import {
   BackendIAnfluencer,
   BackendPost,
@@ -334,6 +334,67 @@ class ApiService {
     const response = await this.fetchJson<ApiResponse<{ email_verified: boolean; email_verified_at: string | null }>>('/email/verification-status');
     if (!response.success) {
       throw new Error(response.error || 'Failed to check verification status');
+    }
+    return response.data;
+  }
+
+  // Notification methods
+  async getNotifications(limit?: number, offset?: number): Promise<Notification[]> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/notifications?${queryString}` : '/notifications';
+
+    const response = await this.fetchJson<ApiResponse<Notification[]>>(endpoint);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch notifications');
+    }
+    return response.data;
+  }
+
+  async getUnreadNotificationsCount(): Promise<number> {
+    const response = await this.fetchJson<{ success: boolean; unread_count: number }>('/notifications/unread-count');
+    if (!response.success) {
+      throw new Error('Failed to fetch unread notifications count');
+    }
+    return response.unread_count;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    const response = await this.fetchJson<ApiResponse<void>>(`/notifications/${id}/read`, {
+      method: 'POST'
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to mark notification as read');
+    }
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    const response = await this.fetchJson<ApiResponse<void>>('/notifications/read-all', {
+      method: 'POST'
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to mark all notifications as read');
+    }
+  }
+
+  async getNotificationSettings(): Promise<NotificationSettings> {
+    const response = await this.fetchJson<ApiResponse<NotificationSettings>>('/notifications/settings');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch notification settings');
+    }
+    return response.data;
+  }
+
+  async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
+    const response = await this.fetchJson<ApiResponse<NotificationSettings>>('/notifications/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update notification settings');
     }
     return response.data;
   }

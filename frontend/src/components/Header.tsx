@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getSavedPostsCount } from '../utils/savedPosts';
 import ViewCounter from './ViewCounter';
+import NotificationPanel from './NotificationPanel';
+import { Notification } from '../types';
 
 interface HeaderProps {
   onSearch?: (searchTerm: string) => void;
@@ -18,6 +20,11 @@ interface HeaderProps {
   onNicheToggle?: (niche: string) => void;
   onClearNicheFilters?: () => void;
   availableNiches?: string[];
+  notifications?: Notification[];
+  unreadNotificationsCount?: number;
+  onMarkNotificationAsRead?: (id: number) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onNotificationClick?: (notification: Notification) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -35,9 +42,15 @@ const Header: React.FC<HeaderProps> = ({
   selectedNiches = [],
   onNicheToggle,
   onClearNicheFilters,
-  availableNiches = []
+  availableNiches = [],
+  notifications = [],
+  unreadNotificationsCount = 0,
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
+  onNotificationClick
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [savedPostsCount, setSavedPostsCount] = useState(0);
 
@@ -223,6 +236,41 @@ const Header: React.FC<HeaderProps> = ({
                   </span>
                 )}
               </button>
+            )}
+
+            {/* Notifications button - only show for authenticated users */}
+            {authUser && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Ver notificaciones"
+                  title="Notificaciones"
+                >
+                  <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification panel */}
+                {showNotifications && onMarkNotificationAsRead && onMarkAllNotificationsAsRead && onNotificationClick && (
+                  <NotificationPanel
+                    notifications={notifications}
+                    onClose={() => setShowNotifications(false)}
+                    onMarkAsRead={onMarkNotificationAsRead}
+                    onMarkAllAsRead={onMarkAllNotificationsAsRead}
+                    onNotificationClick={(notification) => {
+                      setShowNotifications(false);
+                      onNotificationClick(notification);
+                    }}
+                  />
+                )}
+              </div>
             )}
           </div>
 
