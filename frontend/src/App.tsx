@@ -9,6 +9,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import SavedPostsView from './components/SavedPostsView';
 import RegisterReminderModal from './components/RegisterReminderModal';
+import EmailVerified from './components/EmailVerified';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem } from './types';
@@ -23,7 +24,7 @@ const ANONYMOUS_INTERACTIONS_KEY = 'iagram_anonymous_interactions';
 const REMINDER_SHOWN_COUNT_KEY = 'reminder_shown_count';
 const INTERACTION_THRESHOLD = 5;
 
-type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password' | 'email-verified';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -417,6 +418,12 @@ function App() {
       return;
     }
 
+    // Check if we're on the email-verified URL
+    if (urlParams.get('success') === 'true' && window.location.pathname.includes('email-verified')) {
+      setCurrentView('email-verified');
+      return;
+    }
+
     // Check if user has seen landing page before
     const hasSeenLanding = localStorage.getItem(LANDING_SEEN_KEY);
     if (!hasSeenLanding) {
@@ -495,6 +502,15 @@ function App() {
     return (
       <Layout showHeader={false}>
         <ResetPassword onBack={handleShowLogin} onGoToForgotPassword={handleShowForgotPassword} />
+      </Layout>
+    );
+  }
+
+  // Show email verified page
+  if (currentView === 'email-verified') {
+    return (
+      <Layout showHeader={false}>
+        <EmailVerified onContinue={handleBackToFeed} />
       </Layout>
     );
   }

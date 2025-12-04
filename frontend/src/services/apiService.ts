@@ -319,6 +319,24 @@ class ApiService {
       logger.warn('Logout API call failed, but clearing local auth data anyway:', error);
     }
   }
+
+  // Email verification methods
+  async resendVerificationEmail(): Promise<void> {
+    const response = await this.fetchJson<ApiResponse<void>>('/email/resend', {
+      method: 'POST'
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to resend verification email');
+    }
+  }
+
+  async checkVerificationStatus(): Promise<{ email_verified: boolean; email_verified_at: string | null }> {
+    const response = await this.fetchJson<ApiResponse<{ email_verified: boolean; email_verified_at: string | null }>>('/email/verification-status');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to check verification status');
+    }
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();
