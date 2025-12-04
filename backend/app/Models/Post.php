@@ -12,6 +12,7 @@ class Post extends Model
     protected $fillable = [
         'i_anfluencer_id',
         'content',
+        'mentions',
         'image_url',
         'image_description',
         'ai_generation_params',
@@ -23,6 +24,7 @@ class Post extends Model
 
     protected $casts = [
         'ai_generation_params' => 'array',
+        'mentions' => 'array',
         'is_ai_generated' => 'boolean',
         'published_at' => 'datetime'
     ];

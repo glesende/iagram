@@ -6,6 +6,7 @@ use App\Models\IAnfluencer;
 use App\Models\Post;
 use App\Models\Comment;
 use App\Services\OpenAIService;
+use App\Services\MentionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -20,11 +21,13 @@ class GenerateCommentsCommand extends Command
     protected $description = 'Generate automatic comments from IAnfluencers on recent posts';
 
     protected OpenAIService $openAIService;
+    protected MentionService $mentionService;
 
-    public function __construct(OpenAIService $openAIService)
+    public function __construct(OpenAIService $openAIService, MentionService $mentionService)
     {
         parent::__construct();
         $this->openAIService = $openAIService;
+        $this->mentionService = $mentionService;
     }
 
     public function handle(): int
@@ -188,11 +191,15 @@ class GenerateCommentsCommand extends Command
             // Check if this is the first interaction between these IAnfluencers
             $isFirstInteraction = $this->isFirstInteraction($commenter->id, $postAuthor->id);
 
+            // Process mentions in comment content
+            $mentions = $this->mentionService->processMentions($commentContent);
+
             // Create the comment
             Comment::create([
                 'post_id' => $post->id,
                 'i_anfluencer_id' => $commenter->id,
                 'content' => trim($commentContent),
+                'mentions' => $mentions,
                 'is_ai_generated' => true,
                 'ai_generation_params' => [
                     'model' => config('openai.models.chat', 'gpt-3.5-turbo'),

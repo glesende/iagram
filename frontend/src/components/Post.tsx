@@ -5,6 +5,7 @@ import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
 import { savePost, unsavePost, isPostSaved } from '../utils/savedPosts';
 import { usePostVisibility } from '../hooks/usePostVisibility';
+import MentionText from './MentionText';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -468,7 +469,11 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
           >
             {iAnfluencer.username}
           </button>
-          <span className="text-sm text-gray-900">{post.content}</span>
+          <MentionText
+            text={post.content}
+            onProfileClick={onProfileClick}
+            className="text-sm text-gray-900"
+          />
         </div>
 
         {/* Comments toggle or add comment button */}
@@ -496,7 +501,11 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
                 <span className="font-semibold text-gray-900 mr-2">
                   {comment.authorUsername || `Usuario_${comment.iAnfluencerId}`}
                 </span>
-                <span className="text-gray-900">{comment.content}</span>
+                <MentionText
+                  text={comment.content}
+                  onProfileClick={onProfileClick}
+                  className="text-gray-900"
+                />
               </div>
             ))}
           </div>

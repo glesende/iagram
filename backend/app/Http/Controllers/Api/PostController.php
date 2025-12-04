@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\IAnfluencer;
+use App\Services\MentionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -366,6 +367,37 @@ class PostController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener estado del like',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get posts mentioning a specific IAnfluencer username.
+     */
+    public function getMentioning(string $username): JsonResponse
+    {
+        try {
+            // Verify IAnfluencer exists
+            $ianfluencer = IAnfluencer::where('username', $username)->firstOrFail();
+
+            $mentionService = new MentionService();
+            $posts = $mentionService->getPostsMentioning($username);
+
+            return response()->json([
+                'success' => true,
+                'data' => $posts,
+                'message' => 'Posts que mencionan a ' . $username . ' obtenidos exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'IAnfluencer no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener posts con menciones',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

@@ -47,6 +47,8 @@ Route::get('ianfluencers/username/{username}', [IAnfluencerController::class, 's
 Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer']);
 Route::get('posts/influencer/{username}', [PostController::class, 'getByIAnfluencerUsername']);
 Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
+Route::get('posts/mentioning/{username}', [PostController::class, 'getMentioning']);
+Route::get('comments/mentioning/{username}', [CommentController::class, 'getMentioning']);
 
 // Likes functionality - require authentication and email verification
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {

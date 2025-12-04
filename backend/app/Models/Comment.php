@@ -15,6 +15,7 @@ class Comment extends Model
         'session_id',
         'author_name',
         'content',
+        'mentions',
         'is_ai_generated',
         'ai_generation_params',
         'likes_count'
@@ -22,7 +23,8 @@ class Comment extends Model
 
     protected $casts = [
         'is_ai_generated' => 'boolean',
-        'ai_generation_params' => 'array'
+        'ai_generation_params' => 'array',
+        'mentions' => 'array'
     ];
 
     public function post()
