@@ -12,10 +12,11 @@ import RegisterReminderModal from './components/RegisterReminderModal';
 import EmailVerified from './components/EmailVerified';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
-import { FeedItem } from './types';
+import { FeedItem, Notification } from './types';
 import logger from './utils/logger';
 import { extractUTMParameters, storeUTMParameters } from './utils/sharing';
 import { usePostViewCounter } from './hooks/usePostViewCounter';
+import { useNotifications } from './hooks/useNotifications';
 
 const LANDING_SEEN_KEY = 'iagram_landing_seen';
 const AUTH_TOKEN_KEY = 'iagram_auth_token';
@@ -43,6 +44,14 @@ function App() {
 
   // Post view counter
   const { viewCount, incrementViewCount } = usePostViewCounter();
+
+  // Notifications
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead
+  } = useNotifications(authUser);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -261,6 +270,22 @@ function App() {
       (window as any).gtag('event', 'navigate_to_saved_posts', {
         event_category: 'Navigation',
       });
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Navigate based on notification type
+    if (notification.type === 'like' || notification.type === 'comment' || notification.type === 'mention') {
+      // Navigate to feed - could be enhanced to scroll to specific post
+      setCurrentView('feed');
+    } else if (notification.type === 'follow' && notification.i_anfluencer) {
+      // Navigate to IAnfluencer profile
+      setSelectedUsername(notification.i_anfluencer.username);
+      setCurrentView('profile');
+    } else if (notification.type === 'new_post' && notification.i_anfluencer) {
+      // Navigate to IAnfluencer profile to see the new post
+      setSelectedUsername(notification.i_anfluencer.username);
+      setCurrentView('profile');
     }
   };
 
@@ -565,6 +590,11 @@ function App() {
         onNicheToggle={handleNicheToggle}
         onClearNicheFilters={handleClearNicheFilters}
         availableNiches={availableNiches}
+        notifications={notifications}
+        unreadNotificationsCount={unreadCount}
+        onMarkNotificationAsRead={markAsRead}
+        onMarkAllNotificationsAsRead={markAllAsRead}
+        onNotificationClick={handleNotificationClick}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -590,6 +620,11 @@ function App() {
       onNicheToggle={handleNicheToggle}
       onClearNicheFilters={handleClearNicheFilters}
       availableNiches={availableNiches}
+      notifications={notifications}
+      unreadNotificationsCount={unreadCount}
+      onMarkNotificationAsRead={markAsRead}
+      onMarkAllNotificationsAsRead={markAllAsRead}
+      onNotificationClick={handleNotificationClick}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -50,22 +51,41 @@ class CommentController extends Controller
 
             // If no i_anfluencer_id provided, this is a human comment
             if (!isset($commentData['i_anfluencer_id'])) {
-                // Generate or get session ID from request
-                if (!isset($commentData['session_id'])) {
-                    $commentData['session_id'] = $request->session()->getId();
-                }
+                // Get authenticated user if available
+                $user = $request->user();
+                $userId = $user ? $user->id : null;
 
-                // Default author name for anonymous users
-                if (!isset($commentData['author_name'])) {
-                    $commentData['author_name'] = 'Usuario Anónimo';
+                // Set user_id if authenticated
+                if ($userId) {
+                    $commentData['user_id'] = $userId;
+                    $commentData['author_name'] = $user->name;
+                } else {
+                    // Generate or get session ID for anonymous users
+                    if (!isset($commentData['session_id'])) {
+                        $commentData['session_id'] = $request->session()->getId();
+                    }
+
+                    // Default author name for anonymous users
+                    if (!isset($commentData['author_name'])) {
+                        $commentData['author_name'] = 'Usuario Anónimo';
+                    }
                 }
             }
 
             $comment = Comment::create($commentData);
 
+            // Generate notification for post owner if this is from an authenticated user
+            if (isset($commentData['user_id']) && isset($commentData['post_id'])) {
+                NotificationService::notifyComment(
+                    $commentData['post_id'],
+                    $comment->id,
+                    $commentData['user_id']
+                );
+            }
+
             return response()->json([
                 'success' => true,
-                'data' => $comment->load(['post', 'iAnfluencer']),
+                'data' => $comment->load(['post', 'iAnfluencer', 'user']),
                 'message' => 'Comentario creado exitosamente'
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {

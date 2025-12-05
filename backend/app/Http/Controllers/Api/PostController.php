@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\IAnfluencer;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -55,6 +56,9 @@ class PostController extends Controller
             }
 
             $post = Post::create($postData);
+
+            // Generate notifications for followers of this IAnfluencer
+            NotificationService::notifyNewPost($post->id);
 
             return response()->json([
                 'success' => true,
@@ -240,6 +244,11 @@ class PostController extends Controller
 
             // Update the post's likes count
             $post->increment('likes_count');
+
+            // Generate notification for the post owner
+            if ($userId) {
+                NotificationService::notifyLike($post->id, $userId);
+            }
 
             return response()->json([
                 'success' => true,

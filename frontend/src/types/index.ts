@@ -43,3 +43,6 @@ export interface FeedItem {
   iAnfluencer: IAnfluencer;
   comments: Comment[];
 }
+
+// Export notification types
+export * from './notification';

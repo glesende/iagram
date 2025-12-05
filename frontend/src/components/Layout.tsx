@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import EmailVerificationBanner from './EmailVerificationBanner';
+import { Notification } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,11 @@ interface LayoutProps {
   onNicheToggle?: (niche: string) => void;
   onClearNicheFilters?: () => void;
   availableNiches?: string[];
+  notifications?: Notification[];
+  unreadNotificationsCount?: number;
+  onMarkNotificationAsRead?: (id: number) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onNotificationClick?: (notification: Notification) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -39,7 +45,12 @@ const Layout: React.FC<LayoutProps> = ({
   selectedNiches,
   onNicheToggle,
   onClearNicheFilters,
-  availableNiches
+  availableNiches,
+  notifications,
+  unreadNotificationsCount,
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
+  onNotificationClick
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,6 +72,11 @@ const Layout: React.FC<LayoutProps> = ({
             onNicheToggle={onNicheToggle}
             onClearNicheFilters={onClearNicheFilters}
             availableNiches={availableNiches}
+            notifications={notifications}
+            unreadNotificationsCount={unreadNotificationsCount}
+            onMarkNotificationAsRead={onMarkNotificationAsRead}
+            onMarkAllNotificationsAsRead={onMarkAllNotificationsAsRead}
+            onNotificationClick={onNotificationClick}
           />
           <EmailVerificationBanner authUser={authUser} />
         </>

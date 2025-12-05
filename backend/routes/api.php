@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,4 +68,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('ianfluencers/{id}/follow-status', [IAnfluencerController::class, 'getFollowStatus']);
     Route::get('me/following', [IAnfluencerController::class, 'getFollowing']);
+});
+
+// Notification routes - require authentication only
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('notifications/settings', [NotificationController::class, 'getSettings']);
+    Route::put('notifications/settings', [NotificationController::class, 'updateSettings']);
 });
