@@ -83,10 +83,14 @@ class ApiService {
           const errorData = await response.json().catch(() => null);
 
           // Check if this is an email verification error
-          if (errorData?.message?.includes('email') || errorData?.message?.includes('verif')) {
+          if (errorData?.error_code === 'EMAIL_NOT_VERIFIED' ||
+              errorData?.data?.requires_verification ||
+              errorData?.message?.includes('email') ||
+              errorData?.message?.includes('verif')) {
             const error = new Error(errorData.message || 'Tu email no ha sido verificado. Por favor verifica tu email para continuar.');
             (error as any).status = 403;
             (error as any).isEmailVerificationError = true;
+            (error as any).errorCode = 'EMAIL_NOT_VERIFIED';
             throw error;
           }
 
