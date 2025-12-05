@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Notification } from '../types';
 import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface NotificationPanelProps {
   notifications: Notification[];
@@ -154,8 +153,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
                 )}
                 <p className="text-xs text-gray-400 mt-1">
                   {formatDistanceToNow(new Date(notification.created_at), {
-                    addSuffix: true,
-                    locale: es
+                    addSuffix: true
                   })}
                 </p>
               </div>

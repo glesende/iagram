@@ -51,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({
   unreadNotificationsCount,
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
-  onNotificationClick
+  onNotificationClick,
   onShowExplore
 }) => {
   return (

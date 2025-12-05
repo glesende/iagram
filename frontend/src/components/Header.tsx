@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({
   unreadNotificationsCount = 0,
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
-  onNotificationClick
+  onNotificationClick,
   onShowExplore
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import EmailVerificationPending from './EmailVerificationPending';
+import ActivityStats from './ActivityStats';
+import ActivityBadge from './ActivityBadge';
 
 interface RegisterProps {
   onBack: () => void;
@@ -230,7 +232,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
               </div>
 
               {/* Social proof */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-center mb-2">
                   <div className="flex -space-x-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
@@ -246,6 +248,9 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
                   Nuevo contenido generado cada día
                 </p>
               </div>
+
+              {/* Activity Stats - Desktop */}
+              <ActivityStats />
             </div>
           </div>
 
@@ -292,6 +297,11 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
                   ✨ 100% gratis • Sin anuncios • Contenido IA
                 </p>
               </div>
+            </div>
+
+            {/* Activity Badge - Mobile */}
+            <div className="mb-6">
+              <ActivityBadge />
             </div>
 
             {/* Registration card */}
