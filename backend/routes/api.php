@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\StatsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,9 @@ use App\Http\Controllers\Api\NotificationController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Statistics routes (public)
+Route::get('/stats/activity', [StatsController::class, 'activity']);
 
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
