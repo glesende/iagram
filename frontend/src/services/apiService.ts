@@ -78,12 +78,32 @@ class ApiService {
       });
 
       if (!response.ok) {
+        // Handle 403 Forbidden specifically (likely email not verified)
+        if (response.status === 403) {
+          const errorData = await response.json().catch(() => null);
+
+          // Check if this is an email verification error
+          if (errorData?.message?.includes('email') || errorData?.message?.includes('verif')) {
+            const error = new Error(errorData.message || 'Tu email no ha sido verificado. Por favor verifica tu email para continuar.');
+            (error as any).status = 403;
+            (error as any).isEmailVerificationError = true;
+            throw error;
+          }
+
+          throw new Error(errorData?.message || 'No tienes permisos para realizar esta acción.');
+        }
+
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
-      logger.error(`API Error for ${endpoint}:`, error);
+      // Log more detailed error information
+      if ((error as any).isEmailVerificationError) {
+        logger.warn(`Email verification required for ${endpoint}`);
+      } else {
+        logger.error(`API Error for ${endpoint}:`, error);
+      }
       throw error;
     }
   }

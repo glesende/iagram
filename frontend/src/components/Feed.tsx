@@ -295,6 +295,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             onProfileClick={onProfileClick}
             onAnonymousInteraction={onAnonymousInteraction}
             onPostViewed={onPostViewed}
+            authUser={authUser}
           />
         ))
       )}
