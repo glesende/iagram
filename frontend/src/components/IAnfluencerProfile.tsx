@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { IAnfluencer, Post } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
+import { isEmailVerified } from '../utils/emailVerification';
+import VerifyEmailPrompt from './VerifyEmailPrompt';
 
 interface IAnfluencerProfileProps {
   username: string;
@@ -25,6 +27,7 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [optimisticFollowerCount, setOptimisticFollowerCount] = useState<number | null>(null);
+  const [showVerifyEmailPrompt, setShowVerifyEmailPrompt] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -102,6 +105,21 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({
       } else {
         alert('Por favor, regístrate para seguir a IAnfluencers');
       }
+      return;
+    }
+
+    // Check if user's email is verified
+    if (!isEmailVerified(authUser)) {
+      setShowVerifyEmailPrompt(true);
+
+      // Track verification prompt shown event
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'verify_email_prompt_shown', {
+          trigger: 'follow_attempt',
+          event_category: 'Email Verification',
+        });
+      }
+
       return;
     }
 
@@ -187,7 +205,15 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white min-h-screen">
+    <>
+      {/* Email Verification Prompt Modal */}
+      <VerifyEmailPrompt
+        isOpen={showVerifyEmailPrompt}
+        onClose={() => setShowVerifyEmailPrompt(false)}
+        userEmail={authUser?.email || ''}
+      />
+
+      <div className="max-w-4xl mx-auto bg-white min-h-screen">
       {/* Header with Back Button */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-300 px-4 py-3">
         <div className="flex items-center">
@@ -354,6 +380,7 @@ const IAnfluencerProfile: React.FC<IAnfluencerProfileProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

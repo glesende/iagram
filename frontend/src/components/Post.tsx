@@ -5,16 +5,19 @@ import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
 import { savePost, unsavePost, isPostSaved } from '../utils/savedPosts';
 import { usePostVisibility } from '../hooks/usePostVisibility';
+import { isEmailVerified } from '../utils/emailVerification';
 import MentionText from './MentionText';
+import VerifyEmailPrompt from './VerifyEmailPrompt';
 
 interface PostProps {
   feedItem: FeedItem;
   onProfileClick?: (username: string) => void;
   onAnonymousInteraction?: () => void;
   onPostViewed?: () => void;
+  authUser?: any;
 }
 
-const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction, onPostViewed }) => {
+const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction, onPostViewed, authUser }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -25,6 +28,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [localComments, setLocalComments] = useState(comments);
   const [commentsCount, setCommentsCount] = useState(comments.length);
+  const [showVerifyEmailPrompt, setShowVerifyEmailPrompt] = useState(false);
 
   // Track post visibility to increment view counter
   const { ref: postRef } = usePostVisibility({
@@ -47,6 +51,21 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
 
   const handleLike = async () => {
     if (isLoading) return;
+
+    // Check if user is authenticated and email is verified
+    if (authUser && !isEmailVerified(authUser)) {
+      setShowVerifyEmailPrompt(true);
+
+      // Track verification prompt shown event
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'verify_email_prompt_shown', {
+          trigger: 'like_attempt',
+          event_category: 'Email Verification',
+        });
+      }
+
+      return;
+    }
 
     setIsLoading(true);
 
@@ -265,6 +284,21 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const handleAddComment = async () => {
     if (!commentText.trim() || isSubmittingComment) return;
 
+    // Check if user is authenticated and email is verified
+    if (authUser && !isEmailVerified(authUser)) {
+      setShowVerifyEmailPrompt(true);
+
+      // Track verification prompt shown event
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'verify_email_prompt_shown', {
+          trigger: 'comment_attempt',
+          event_category: 'Email Verification',
+        });
+      }
+
+      return;
+    }
+
     const trimmedComment = commentText.trim();
     setIsSubmittingComment(true);
 
@@ -335,7 +369,15 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   };
 
   return (
-    <article ref={postRef as React.RefObject<HTMLElement>} className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
+    <>
+      {/* Email Verification Prompt Modal */}
+      <VerifyEmailPrompt
+        isOpen={showVerifyEmailPrompt}
+        onClose={() => setShowVerifyEmailPrompt(false)}
+        userEmail={authUser?.email || ''}
+      />
+
+      <article ref={postRef as React.RefObject<HTMLElement>} className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center p-4">
         <button
@@ -544,6 +586,7 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
         )}
       </div>
     </article>
+    </>
   );
 };
 
