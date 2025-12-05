@@ -20,6 +20,7 @@ interface LayoutProps {
   onNicheToggle?: (niche: string) => void;
   onClearNicheFilters?: () => void;
   availableNiches?: string[];
+  onShowExplore?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -39,7 +40,8 @@ const Layout: React.FC<LayoutProps> = ({
   selectedNiches,
   onNicheToggle,
   onClearNicheFilters,
-  availableNiches
+  availableNiches,
+  onShowExplore
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,6 +63,7 @@ const Layout: React.FC<LayoutProps> = ({
             onNicheToggle={onNicheToggle}
             onClearNicheFilters={onClearNicheFilters}
             availableNiches={availableNiches}
+            onShowExplore={onShowExplore}
           />
           <EmailVerificationBanner authUser={authUser} />
         </>
