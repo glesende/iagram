@@ -6,6 +6,7 @@ use App\Models\IAnfluencer;
 use App\Models\Post;
 use App\Services\OpenAIService;
 use App\Services\ImageStorageService;
+use App\Services\MentionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -20,14 +21,16 @@ class GeneratePostsCommand extends Command
 
     protected OpenAIService $openAIService;
     protected ImageStorageService $imageStorageService;
+    protected MentionService $mentionService;
     protected int $imagesGenerated = 0;
     protected int $maxImagesPerExecution;
 
-    public function __construct(OpenAIService $openAIService, ImageStorageService $imageStorageService)
+    public function __construct(OpenAIService $openAIService, ImageStorageService $imageStorageService, MentionService $mentionService)
     {
         parent::__construct();
         $this->openAIService = $openAIService;
         $this->imageStorageService = $imageStorageService;
+        $this->mentionService = $mentionService;
         $this->maxImagesPerExecution = config('openai.image.max_per_execution', 5);
     }
 
@@ -136,10 +139,14 @@ class GeneratePostsCommand extends Command
                     continue;
                 }
 
+                // Process mentions in content
+                $mentions = $this->mentionService->processMentions($generatedPost['content']);
+
                 // Create the post first without image
                 $post = Post::create([
                     'i_anfluencer_id' => $influencer->id,
                     'content' => $generatedPost['content'],
+                    'mentions' => $mentions,
                     'image_url' => null,
                     'ai_generation_params' => [
                         'model' => config('openai.models.chat', 'gpt-3.5-turbo'),

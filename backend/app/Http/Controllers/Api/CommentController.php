@@ -7,6 +7,8 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Services\NotificationService;
+use App\Models\IAnfluencer;
+use App\Services\MentionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -70,6 +72,12 @@ class CommentController extends Controller
                         $commentData['author_name'] = 'Usuario Anónimo';
                     }
                 }
+            }
+
+            // Process mentions in content
+            if (isset($commentData['content'])) {
+                $mentionService = new MentionService();
+                $commentData['mentions'] = $mentionService->processMentions($commentData['content']);
             }
 
             $comment = Comment::create($commentData);
@@ -199,6 +207,37 @@ class CommentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener los comentarios del post',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get comments mentioning a specific IAnfluencer username.
+     */
+    public function getMentioning(string $username): JsonResponse
+    {
+        try {
+            // Verify IAnfluencer exists
+            $ianfluencer = IAnfluencer::where('username', $username)->firstOrFail();
+
+            $mentionService = new MentionService();
+            $comments = $mentionService->getCommentsMentioning($username);
+
+            return response()->json([
+                'success' => true,
+                'data' => $comments,
+                'message' => 'Comentarios que mencionan a ' . $username . ' obtenidos exitosamente'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'IAnfluencer no encontrado'
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener comentarios con menciones',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
