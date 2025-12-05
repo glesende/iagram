@@ -113,6 +113,67 @@ class ApiService {
     return mapBackendIAnfluencer(response.data);
   }
 
+  // Get IAnfluencers for explore page with filters and sorting
+  async getExploreIAnfluencers(params?: {
+    niche?: string[];
+    verified?: boolean;
+    search?: string;
+    sort_by?: 'followers_desc' | 'followers_asc' | 'posts_desc' | 'posts_asc' | 'alphabetical_asc' | 'alphabetical_desc' | 'random' | 'recent';
+    per_page?: number;
+    page?: number;
+  }): Promise<{
+    data: IAnfluencer[];
+    meta: {
+      current_page: number;
+      from: number;
+      last_page: number;
+      per_page: number;
+      to: number;
+      total: number;
+    };
+  }> {
+    // Build query string
+    const queryParams = new URLSearchParams();
+
+    if (params?.niche && params.niche.length > 0) {
+      queryParams.append('niche', params.niche.join(','));
+    }
+
+    if (params?.verified !== undefined) {
+      queryParams.append('verified', params.verified.toString());
+    }
+
+    if (params?.search) {
+      queryParams.append('search', params.search);
+    }
+
+    if (params?.sort_by) {
+      queryParams.append('sort_by', params.sort_by);
+    }
+
+    if (params?.per_page) {
+      queryParams.append('per_page', params.per_page.toString());
+    }
+
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/ianfluencers/explore${queryString ? `?${queryString}` : ''}`;
+
+    const response = await this.fetchJson<PaginatedApiResponse<BackendIAnfluencer>>(endpoint);
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch IAnfluencers for explore');
+    }
+
+    return {
+      data: response.data.data.map(mapBackendIAnfluencer),
+      meta: response.data.meta
+    };
+  }
+
   // Posts API methods
   async getPosts(): Promise<Post[]> {
     const response = await this.fetchJson<PaginatedApiResponse<BackendPost>>('/posts');

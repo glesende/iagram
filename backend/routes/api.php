@@ -44,6 +44,7 @@ Route::apiResource('ianfluencers', IAnfluencerController::class);
 Route::apiResource('posts', PostController::class);
 Route::apiResource('comments', CommentController::class);
 
+Route::get('ianfluencers/explore', [IAnfluencerController::class, 'explore']);
 Route::get('ianfluencers/username/{username}', [IAnfluencerController::class, 'showByUsername']);
 Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer']);
 Route::get('posts/influencer/{username}', [PostController::class, 'getByIAnfluencerUsername']);

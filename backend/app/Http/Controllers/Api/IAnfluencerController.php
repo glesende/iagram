@@ -40,6 +40,109 @@ class IAnfluencerController extends Controller
     }
 
     /**
+     * Get all IAnfluencers for explore page with filters and sorting
+     */
+    public function explore(Request $request): JsonResponse
+    {
+        try {
+            $query = IAnfluencer::query();
+
+            // Get posts count for each IAnfluencer
+            $query->withCount('posts');
+
+            // Filter by niches if provided
+            if ($request->has('niche') && !empty($request->niche)) {
+                $niches = is_array($request->niche) ? $request->niche : explode(',', $request->niche);
+                $query->whereIn('niche', $niches);
+            }
+
+            // Filter by verified status if provided
+            if ($request->has('verified') && $request->verified !== null) {
+                $verified = filter_var($request->verified, FILTER_VALIDATE_BOOLEAN);
+                // Assuming there's an 'is_verified' field - adjust if needed
+                // If there's no verified field, remove this filter
+                if (DB::getSchemaBuilder()->hasColumn('i_anfluencers', 'is_verified')) {
+                    $query->where('is_verified', $verified);
+                }
+            }
+
+            // Search by username or display_name if provided
+            if ($request->has('search') && !empty($request->search)) {
+                $searchTerm = $request->search;
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('username', 'like', "%{$searchTerm}%")
+                      ->orWhere('display_name', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            // Sorting
+            $sortBy = $request->get('sort_by', 'followers_desc');
+
+            switch ($sortBy) {
+                case 'followers_desc':
+                    $query->orderBy('followers_count', 'desc');
+                    break;
+                case 'followers_asc':
+                    $query->orderBy('followers_count', 'asc');
+                    break;
+                case 'posts_desc':
+                    $query->orderBy('posts_count', 'desc');
+                    break;
+                case 'posts_asc':
+                    $query->orderBy('posts_count', 'asc');
+                    break;
+                case 'alphabetical_asc':
+                    $query->orderBy('username', 'asc');
+                    break;
+                case 'alphabetical_desc':
+                    $query->orderBy('username', 'desc');
+                    break;
+                case 'random':
+                    $query->inRandomOrder();
+                    break;
+                case 'recent':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                default:
+                    $query->orderBy('followers_count', 'desc');
+            }
+
+            // Paginate results
+            $perPage = $request->get('per_page', 50);
+            $ianfluencers = $query->paginate($perPage);
+
+            // Add follow status for authenticated user
+            if ($user = $request->user()) {
+                $followedIds = Follow::where('user_id', $user->id)
+                    ->pluck('i_anfluencer_id')
+                    ->toArray();
+
+                $ianfluencers->getCollection()->transform(function ($ianfluencer) use ($followedIds) {
+                    $ianfluencer->is_following = in_array($ianfluencer->id, $followedIds);
+                    return $ianfluencer;
+                });
+            } else {
+                $ianfluencers->getCollection()->transform(function ($ianfluencer) {
+                    $ianfluencer->is_following = false;
+                    return $ianfluencer;
+                });
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $ianfluencers,
+                'message' => 'IAnfluencers para explorar obtenidos exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener IAnfluencers para explorar',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreIAnfluencerRequest $request): JsonResponse

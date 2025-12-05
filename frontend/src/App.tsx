@@ -10,6 +10,7 @@ import ResetPassword from './components/ResetPassword';
 import SavedPostsView from './components/SavedPostsView';
 import RegisterReminderModal from './components/RegisterReminderModal';
 import EmailVerified from './components/EmailVerified';
+import ExploreIAnfluencers from './components/ExploreIAnfluencers';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem, Notification } from './types';
@@ -25,7 +26,7 @@ const ANONYMOUS_INTERACTIONS_KEY = 'iagram_anonymous_interactions';
 const REMINDER_SHOWN_COUNT_KEY = 'reminder_shown_count';
 const INTERACTION_THRESHOLD = 5;
 
-type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password' | 'email-verified';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password' | 'email-verified' | 'explore';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -286,6 +287,17 @@ function App() {
       // Navigate to IAnfluencer profile to see the new post
       setSelectedUsername(notification.i_anfluencer.username);
       setCurrentView('profile');
+    }
+  };
+  
+  const handleShowExplore = () => {
+    setCurrentView('explore');
+
+    // Track explore view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'navigate_to_explore', {
+        event_category: 'Navigation',
+      });
     }
   };
 
@@ -571,6 +583,47 @@ function App() {
     );
   }
 
+  // Show explore view
+  if (currentView === 'explore') {
+    return (
+      <Layout
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
+        onClearSearch={handleClearSearch}
+        onShowLanding={handleShowLanding}
+        onShowRegister={handleShowRegister}
+        onShowLogin={handleShowLogin}
+        authUser={authUser}
+        onLogout={handleLogout}
+        onShowSavedPosts={handleShowSavedPosts}
+        onAnonymousInteraction={trackAnonymousInteraction}
+        viewCount={viewCount}
+        selectedNiches={selectedNiches}
+        onNicheToggle={handleNicheToggle}
+        onClearNicheFilters={handleClearNicheFilters}
+        availableNiches={availableNiches}
+        onShowExplore={handleShowExplore}
+      >
+        <ExploreIAnfluencers
+          authUser={authUser}
+          selectedNiches={selectedNiches}
+          searchTerm={searchTerm}
+          onViewProfile={handleProfileClick}
+          onNicheToggle={handleNicheToggle}
+          onClearNicheFilters={handleClearNicheFilters}
+          onShowRegisterModal={handleShowRegister}
+        />
+        {/* Register Reminder Modal */}
+        <RegisterReminderModal
+          isOpen={showReminderModal}
+          onClose={handleReminderClose}
+          onRegister={handleReminderRegister}
+          anonymousInteractions={anonymousInteractions}
+        />
+      </Layout>
+    );
+  }
+
   // Show feed view
   if (loading) {
     return (
@@ -595,6 +648,7 @@ function App() {
         onMarkNotificationAsRead={markAsRead}
         onMarkAllNotificationsAsRead={markAllAsRead}
         onNotificationClick={handleNotificationClick}
+        onShowExplore={handleShowExplore}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -625,6 +679,7 @@ function App() {
       onMarkNotificationAsRead={markAsRead}
       onMarkAllNotificationsAsRead={markAllAsRead}
       onNotificationClick={handleNotificationClick}
+      onShowExplore={handleShowExplore}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">

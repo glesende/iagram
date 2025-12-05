@@ -25,6 +25,7 @@ interface HeaderProps {
   onMarkNotificationAsRead?: (id: number) => void;
   onMarkAllNotificationsAsRead?: () => void;
   onNotificationClick?: (notification: Notification) => void;
+  onShowExplore?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -48,6 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
   onNotificationClick
+  onShowExplore
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -169,6 +171,17 @@ const Header: React.FC<HeaderProps> = ({
     onAnonymousInteraction?.();
   };
 
+  const handleExploreClick = () => {
+    // Track explore button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'header_explore_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Explore Button',
+      });
+    }
+    onShowExplore?.();
+  };
+
   // Define niche labels with emojis for better UX
   const nicheLabels: Record<string, string> = {
     'lifestyle': 'Lifestyle',
@@ -185,18 +198,32 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
             <h1 className="text-2xl font-bold text-gray-900">IAgram</h1>
-            {onShowLanding && (
-              <button
-                onClick={handleLandingClick}
-                className="hidden sm:flex items-center text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                aria-label="¿Qué es IAgram?"
-              >
-                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                ¿Qué es IAgram?
-              </button>
-            )}
+            <div className="flex items-center space-x-2">
+              {onShowExplore && (
+                <button
+                  onClick={handleExploreClick}
+                  className="hidden sm:flex items-center text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-3 py-1.5 rounded-lg transition-all"
+                  aria-label="Explorar IAnfluencers"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Explorar
+                </button>
+              )}
+              {onShowLanding && (
+                <button
+                  onClick={handleLandingClick}
+                  className="hidden sm:flex items-center text-sm text-gray-600 hover:text-purple-600 transition-colors"
+                  aria-label="¿Qué es IAgram?"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  ¿Qué es IAgram?
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-3">
