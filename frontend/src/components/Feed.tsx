@@ -11,11 +11,12 @@ interface FeedProps {
   onAnonymousInteraction?: () => void;
   authUser?: any;
   onPostViewed?: () => void;
+  userPreferences?: string[];
 }
 
 type FeedMode = 'for_you' | 'following';
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser, onPostViewed }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser, onPostViewed, userPreferences = [] }) => {
   const [postsViewed, setPostsViewed] = useState(0);
   const lastTrackedPost = useRef(0);
   const [feedMode, setFeedMode] = useState<FeedMode>('for_you');
@@ -98,7 +99,12 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
     ? feedItems.filter(item =>
         followingIAnfluencers.some(following => following.id === item.iAnfluencer.id)
       )
-    : feedItems;
+    : // "Para Ti" mode - apply user preferences if set
+      userPreferences.length > 0
+      ? feedItems.filter(item =>
+          userPreferences.includes(item.iAnfluencer.niche)
+        )
+      : feedItems;
 
   return (
     <div className="max-w-md mx-auto py-6">
@@ -114,7 +120,14 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Para Ti
+              <div className="flex items-center justify-center gap-1.5">
+                Para Ti
+                {userPreferences.length > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" title="Feed personalizado">
+                    ★
+                  </span>
+                )}
+              </div>
               {feedMode === 'for_you' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-blue-600"></div>
               )}

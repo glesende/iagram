@@ -27,6 +27,7 @@ interface LayoutProps {
   onMarkAllNotificationsAsRead?: () => void;
   onNotificationClick?: (notification: Notification) => void;
   onShowExplore?: () => void;
+  onShowFeedPreferences?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -51,8 +52,9 @@ const Layout: React.FC<LayoutProps> = ({
   unreadNotificationsCount,
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
-  onNotificationClick
-  onShowExplore
+  onNotificationClick,
+  onShowExplore,
+  onShowFeedPreferences
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -80,6 +82,7 @@ const Layout: React.FC<LayoutProps> = ({
             onMarkAllNotificationsAsRead={onMarkAllNotificationsAsRead}
             onNotificationClick={onNotificationClick}
             onShowExplore={onShowExplore}
+            onShowFeedPreferences={onShowFeedPreferences}
           />
           <EmailVerificationBanner authUser={authUser} />
         </>

@@ -69,4 +69,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Follow::class);
     }
+
+    /**
+     * Get the content preferences for the user
+     */
+    public function contentPreference()
+    {
+        return $this->hasOne(UserContentPreference::class);
+    }
 }

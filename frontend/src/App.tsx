@@ -11,6 +11,7 @@ import SavedPostsView from './components/SavedPostsView';
 import RegisterReminderModal from './components/RegisterReminderModal';
 import EmailVerified from './components/EmailVerified';
 import ExploreIAnfluencers from './components/ExploreIAnfluencers';
+import FeedPreferencesModal from './components/FeedPreferencesModal';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem, Notification } from './types';
@@ -42,6 +43,8 @@ function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [anonymousInteractions, setAnonymousInteractions] = useState(0);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [showFeedPreferencesModal, setShowFeedPreferencesModal] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<string[]>([]);
 
   // Post view counter
   const { viewCount, incrementViewCount } = usePostViewCounter();
@@ -301,6 +304,29 @@ function App() {
     }
   };
 
+  const handleShowFeedPreferences = () => {
+    setShowFeedPreferencesModal(true);
+
+    // Track feed preferences modal open in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'open_feed_preferences', {
+        event_category: 'Feed Customization',
+      });
+    }
+  };
+
+  const handleSaveFeedPreferences = (preferences: string[]) => {
+    setUserPreferences(preferences);
+
+    // Track feed preferences save in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'save_feed_preferences', {
+        preferences_count: preferences.length,
+        event_category: 'Feed Customization',
+      });
+    }
+  };
+
   const trackAnonymousInteraction = () => {
     // Don't track if user is already authenticated
     if (authUser) return;
@@ -474,6 +500,26 @@ function App() {
     filterFeedItems(feedItems, searchTerm, selectedNiches);
   }, [feedItems, searchTerm, selectedNiches]);
 
+  // Load user content preferences when authenticated
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (!authUser) {
+        setUserPreferences([]);
+        return;
+      }
+
+      try {
+        const preferences = await apiService.getContentPreferences();
+        setUserPreferences(preferences.preferred_niches || []);
+      } catch (error) {
+        logger.error('Error loading user preferences:', error);
+        setUserPreferences([]);
+      }
+    };
+
+    loadUserPreferences();
+  }, [authUser]);
+
   // Calculate available niches from all feed items
   const availableNiches = React.useMemo(() => {
     const niches = new Set<string>();
@@ -603,6 +649,7 @@ function App() {
         onClearNicheFilters={handleClearNicheFilters}
         availableNiches={availableNiches}
         onShowExplore={handleShowExplore}
+        onShowFeedPreferences={handleShowFeedPreferences}
       >
         <ExploreIAnfluencers
           authUser={authUser}
@@ -649,6 +696,7 @@ function App() {
         onMarkAllNotificationsAsRead={markAllAsRead}
         onNotificationClick={handleNotificationClick}
         onShowExplore={handleShowExplore}
+        onShowFeedPreferences={handleShowFeedPreferences}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -680,6 +728,7 @@ function App() {
       onMarkAllNotificationsAsRead={markAllAsRead}
       onNotificationClick={handleNotificationClick}
       onShowExplore={handleShowExplore}
+      onShowFeedPreferences={handleShowFeedPreferences}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
@@ -698,6 +747,7 @@ function App() {
         onAnonymousInteraction={trackAnonymousInteraction}
         authUser={authUser}
         onPostViewed={incrementViewCount}
+        userPreferences={userPreferences}
       />
       {/* Register Reminder Modal */}
       <RegisterReminderModal
@@ -706,6 +756,14 @@ function App() {
         onRegister={handleReminderRegister}
         anonymousInteractions={anonymousInteractions}
       />
+
+      {/* Feed Preferences Modal */}
+      {showFeedPreferencesModal && (
+        <FeedPreferencesModal
+          onClose={() => setShowFeedPreferencesModal(false)}
+          onSave={handleSaveFeedPreferences}
+        />
+      )}
     </Layout>
   );
 }

@@ -459,6 +459,26 @@ class ApiService {
     }
     return response.data;
   }
+
+  // Content preferences methods
+  async getContentPreferences(): Promise<{ preferred_niches: string[] }> {
+    const response = await this.fetchJson<ApiResponse<{ preferred_niches: string[] }>>('/me/content-preferences');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch content preferences');
+    }
+    return response.data;
+  }
+
+  async updateContentPreferences(preferredNiches: string[]): Promise<{ preferred_niches: string[] }> {
+    const response = await this.fetchJson<ApiResponse<{ preferred_niches: string[] }>>('/me/content-preferences', {
+      method: 'POST',
+      body: JSON.stringify({ preferred_niches: preferredNiches })
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update content preferences');
+    }
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();
