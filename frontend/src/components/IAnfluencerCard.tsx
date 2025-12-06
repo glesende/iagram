@@ -58,7 +58,7 @@ const IAnfluencerCard: React.FC<IAnfluencerCardProps> = ({
 
   return (
     <div
-      className="bg-white border border-gray-300 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+      className="bg-white border border-border-default rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200"
       onClick={handleCardClick}
     >
       {/* Avatar and Username */}
@@ -66,15 +66,15 @@ const IAnfluencerCard: React.FC<IAnfluencerCardProps> = ({
         <img
           src={iAnfluencer.profileImage}
           alt={iAnfluencer.username}
-          className="w-24 h-24 rounded-full object-cover mb-3 border-2 border-gray-200"
+          className="w-24 h-24 rounded-full object-cover mb-3 border-2 border-border-light"
         />
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-text-primary">
             @{iAnfluencer.username}
           </h3>
           {iAnfluencer.isVerified && (
             <svg
-              className="w-5 h-5 text-blue-500"
+              className="w-5 h-5 text-brand-secondary"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -91,28 +91,28 @@ const IAnfluencerCard: React.FC<IAnfluencerCardProps> = ({
       {/* Niche Badge */}
       {iAnfluencer.niche && (
         <div className="flex justify-center mb-3">
-          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white">
             {nicheLabels[iAnfluencer.niche] || iAnfluencer.niche}
           </span>
         </div>
       )}
 
       {/* Bio */}
-      <p className="text-sm text-gray-700 text-center mb-4 min-h-[40px] line-clamp-2">
+      <p className="text-sm text-text-primary text-center mb-4 min-h-[40px] line-clamp-2">
         {truncateBio(iAnfluencer.bio)}
       </p>
 
       {/* Stats */}
       <div className="flex justify-center gap-6 mb-4 text-sm">
         <div className="text-center">
-          <div className="font-semibold text-gray-900">
+          <div className="font-semibold text-text-primary">
             {formatFollowerCount(iAnfluencer.followerCount)}
           </div>
-          <div className="text-gray-500">seguidores</div>
+          <div className="text-text-secondary">seguidores</div>
         </div>
         <div className="text-center">
-          <div className="font-semibold text-gray-900">{iAnfluencer.postCount}</div>
-          <div className="text-gray-500">posts</div>
+          <div className="font-semibold text-text-primary">{iAnfluencer.postCount}</div>
+          <div className="text-text-secondary">posts</div>
         </div>
       </div>
 
@@ -122,8 +122,8 @@ const IAnfluencerCard: React.FC<IAnfluencerCardProps> = ({
           onClick={handleFollowClick}
           className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
             isFollowing
-              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-              : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+              ? 'bg-gray-100 text-text-primary hover:bg-gray-200 border border-border-default'
+              : 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:from-purple-700 hover:to-blue-700'
           }`}
         >
           {isFollowing ? 'Siguiendo' : 'Seguir'}
@@ -133,16 +133,16 @@ const IAnfluencerCard: React.FC<IAnfluencerCardProps> = ({
       {!isAuthenticated && (
         <button
           onClick={handleCardClick}
-          className="w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-colors"
+          className="w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:from-purple-700 hover:to-blue-700 transition-colors"
         >
           Ver perfil
         </button>
       )}
 
       {/* Hover Overlay with Additional Info */}
-      <div className="mt-4 pt-4 border-t border-gray-200 hidden group-hover:block">
+      <div className="mt-4 pt-4 border-t border-border-light hidden group-hover:block">
         {iAnfluencer.interests.length > 0 && (
-          <div className="text-xs text-gray-600">
+          <div className="text-xs text-text-secondary">
             <span className="font-medium">Intereses: </span>
             {iAnfluencer.interests.slice(0, 3).join(', ')}
           </div>
