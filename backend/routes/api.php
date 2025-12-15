@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\UserContentPreferenceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -85,4 +86,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::get('notifications/settings', [NotificationController::class, 'getSettings']);
     Route::put('notifications/settings', [NotificationController::class, 'updateSettings']);
+});
+
+// Content preferences routes - require authentication only
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('me/content-preferences', [UserContentPreferenceController::class, 'show']);
+    Route::post('me/content-preferences', [UserContentPreferenceController::class, 'store']);
 });

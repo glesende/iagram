@@ -26,6 +26,7 @@ interface HeaderProps {
   onMarkAllNotificationsAsRead?: () => void;
   onNotificationClick?: (notification: Notification) => void;
   onShowExplore?: () => void;
+  onShowFeedPreferences?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -49,7 +50,8 @@ const Header: React.FC<HeaderProps> = ({
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
   onNotificationClick,
-  onShowExplore
+  onShowExplore,
+  onShowFeedPreferences
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -262,6 +264,20 @@ const Header: React.FC<HeaderProps> = ({
                     {savedPostsCount > 9 ? '9+' : savedPostsCount}
                   </span>
                 )}
+              </button>
+            )}
+
+            {/* Feed Preferences button - only show for authenticated users */}
+            {authUser && onShowFeedPreferences && (
+              <button
+                onClick={onShowFeedPreferences}
+                className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Personalizar feed"
+                title="Personalizar Feed"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
               </button>
             )}
 
