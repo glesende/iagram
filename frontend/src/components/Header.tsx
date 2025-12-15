@@ -52,7 +52,8 @@ const Header: React.FC<HeaderProps> = ({
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
   onNotificationClick,
-  onShowExplore
+  onShowExplore,
+  onShowFeedPreferences
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
