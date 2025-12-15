@@ -3,11 +3,12 @@ import { FeedItem, Comment } from '../types';
 import { apiService } from '../services/apiService';
 import logger from '../utils/logger';
 import { generateTrackableShareUrl, getStoredUTMParameters } from '../utils/sharing';
-import { savePost, unsavePost, isPostSaved } from '../utils/savedPosts';
+import { savePost, unsavePost, isPostSaved, getSavedPosts } from '../utils/savedPosts';
 import { usePostVisibility } from '../hooks/usePostVisibility';
 import { isEmailVerified } from '../utils/emailVerification';
 import MentionText from './MentionText';
 import VerifyEmailPrompt from './VerifyEmailPrompt';
+import SaveToCollectionModal from './SaveToCollectionModal';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -29,6 +30,8 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const [localComments, setLocalComments] = useState(comments);
   const [commentsCount, setCommentsCount] = useState(comments.length);
   const [showVerifyEmailPrompt, setShowVerifyEmailPrompt] = useState(false);
+  const [showSaveToCollectionModal, setShowSaveToCollectionModal] = useState(false);
+  const [currentCollectionIds, setCurrentCollectionIds] = useState<string[]>([]);
 
   // Track post visibility to increment view counter
   const { ref: postRef } = usePostVisibility({
@@ -138,35 +141,19 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
   const handleSave = () => {
     const newIsSaved = !isSaved;
 
-    // Optimistic update
-    setIsSaved(newIsSaved);
-
     if (newIsSaved) {
-      const success = savePost(feedItem);
-      if (!success) {
-        // Revert if save failed
-        setIsSaved(false);
-        return;
-      }
-
-      // Track save event in Google Analytics
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'save_post', {
-          post_id: post.id,
-          ianfluencer_username: iAnfluencer.username,
-          niche: iAnfluencer.niche,
-          event_category: 'Engagement',
-        });
-      }
-
-      logger.log('Post guardado:', post.id);
+      // When saving, show modal to select collections
+      setIsSaved(true);
+      setCurrentCollectionIds([]);
+      setShowSaveToCollectionModal(true);
     } else {
+      // When unsaving, remove the post
       const success = unsavePost(post.id);
       if (!success) {
-        // Revert if unsave failed
-        setIsSaved(true);
         return;
       }
+
+      setIsSaved(false);
 
       // Track unsave event in Google Analytics
       if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -179,6 +166,40 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
       }
 
       logger.log('Post eliminado de guardados:', post.id);
+    }
+  };
+
+  const handleSaveToCollections = (collectionIds: string[]) => {
+    // Save the post with selected collections
+    const success = savePost(feedItem, collectionIds);
+    if (!success) {
+      // Revert if save failed
+      setIsSaved(false);
+      return;
+    }
+
+    // Track save event in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'save_post', {
+        post_id: post.id,
+        ianfluencer_username: iAnfluencer.username,
+        niche: iAnfluencer.niche,
+        collections_count: collectionIds.length,
+        event_category: 'Engagement',
+      });
+    }
+
+    logger.log('Post guardado:', post.id, 'Collections:', collectionIds);
+  };
+
+  const handleEditCollections = () => {
+    // Get current collections for this post
+    const savedPosts = getSavedPosts();
+    const savedPost = savedPosts.find(sp => sp.postId === post.id);
+
+    if (savedPost) {
+      setCurrentCollectionIds(savedPost.collectionIds);
+      setShowSaveToCollectionModal(true);
     }
   };
 
@@ -377,6 +398,21 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
         userEmail={authUser?.email || ''}
       />
 
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={showSaveToCollectionModal}
+        onClose={() => {
+          setShowSaveToCollectionModal(false);
+          // If user cancels and post wasn't previously saved, revert
+          if (!isPostSaved(post.id)) {
+            setIsSaved(false);
+          }
+        }}
+        postId={post.id}
+        currentCollectionIds={currentCollectionIds}
+        onSave={handleSaveToCollections}
+      />
+
       <article ref={postRef as React.RefObject<HTMLElement>} className="bg-white border border-gray-300 rounded-lg mb-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center p-4">
@@ -481,8 +517,15 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
           </div>
           <button
             onClick={handleSave}
-            className="focus:outline-none"
+            onContextMenu={(e) => {
+              e.preventDefault();
+              if (isSaved) {
+                handleEditCollections();
+              }
+            }}
+            className="focus:outline-none relative group"
             aria-label={isSaved ? 'Quitar de guardados' : 'Guardar post'}
+            title={isSaved ? 'Click para quitar • Click derecho para editar colecciones' : 'Guardar post'}
           >
             <svg
               className={`w-6 h-6 ${isSaved ? 'fill-current text-purple-600' : 'text-gray-700'}`}
