@@ -53,7 +53,8 @@ const Layout: React.FC<LayoutProps> = ({
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
   onNotificationClick,
-  onShowExplore
+  onShowExplore,
+  onShowFeedPreferences
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
