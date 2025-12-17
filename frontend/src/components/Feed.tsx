@@ -12,11 +12,14 @@ interface FeedProps {
   authUser?: any;
   onPostViewed?: () => void;
   userPreferences?: string[];
+  selectedHashtag?: string;
+  onHashtagClick?: (hashtag: string) => void;
+  onClearHashtagFilter?: () => void;
 }
 
 type FeedMode = 'for_you' | 'following';
 
-const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser, onPostViewed, userPreferences = [] }) => {
+const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProfileClick, onAnonymousInteraction, authUser, onPostViewed, userPreferences = [], selectedHashtag, onHashtagClick, onClearHashtagFilter }) => {
   const [postsViewed, setPostsViewed] = useState(0);
   const lastTrackedPost = useRef(0);
   const [feedMode, setFeedMode] = useState<FeedMode>('for_you');
@@ -94,8 +97,8 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
     }
   };
 
-  // Filter feed items based on mode
-  const filteredFeedItems = feedMode === 'following'
+  // Filter feed items based on mode and hashtag
+  let filteredFeedItems = feedMode === 'following'
     ? feedItems.filter(item =>
         followingIAnfluencers.some(following => following.id === item.iAnfluencer.id)
       )
@@ -106,8 +109,49 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
         )
       : feedItems;
 
+  // Apply hashtag filter if selected
+  if (selectedHashtag) {
+    filteredFeedItems = filteredFeedItems.filter(item => {
+      const postHashtags = item.post.hashtags || [];
+      // Remove # from hashtag if present for comparison
+      const normalizedHashtag = selectedHashtag.startsWith('#')
+        ? selectedHashtag.substring(1)
+        : selectedHashtag;
+      return postHashtags.some(tag => {
+        const normalizedTag = tag.startsWith('#') ? tag.substring(1) : tag;
+        return normalizedTag.toLowerCase() === normalizedHashtag.toLowerCase();
+      });
+    });
+  }
+
   return (
     <div className="max-w-md mx-auto py-6">
+      {/* Hashtag Filter Indicator */}
+      {selectedHashtag && (
+        <div className="mb-4 mx-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+              </svg>
+              <span className="text-sm font-medium text-blue-900">
+                Mostrando posts con <span className="font-semibold">#{selectedHashtag.replace(/^#/, '')}</span>
+              </span>
+            </div>
+            <button
+              onClick={onClearHashtagFilter}
+              className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+              aria-label="Limpiar filtro de hashtag"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Feed Mode Toggle - only show for authenticated users */}
       {authUser && (
         <div className="mb-4 mx-4">
@@ -309,6 +353,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             onAnonymousInteraction={onAnonymousInteraction}
             onPostViewed={onPostViewed}
             authUser={authUser}
+            onHashtagClick={onHashtagClick}
           />
         ))
       )}

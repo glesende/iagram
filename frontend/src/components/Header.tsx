@@ -29,6 +29,7 @@ interface HeaderProps {
   onNotificationClick?: (notification: Notification) => void;
   onShowExplore?: () => void;
   onShowFeedPreferences?: () => void;
+  onHashtagSearch?: (hashtag: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -53,7 +54,8 @@ const Header: React.FC<HeaderProps> = ({
   onMarkAllNotificationsAsRead,
   onNotificationClick,
   onShowExplore,
-  onShowFeedPreferences
+  onShowFeedPreferences,
+  onHashtagSearch
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -99,14 +101,36 @@ const Header: React.FC<HeaderProps> = ({
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    onSearch?.(value);
 
-    // Track search event in Google Analytics when user types
-    if (value && typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'search', {
-        search_term: value,
-        event_category: 'Search',
-      });
+    // Check if the search is for a hashtag
+    const isHashtagSearch = value.trim().startsWith('#') || value.trim().startsWith('hashtag:');
+
+    if (isHashtagSearch) {
+      // Extract the hashtag (remove # or hashtag: prefix)
+      const hashtag = value.replace(/^(#|hashtag:)\s*/, '').trim();
+
+      if (hashtag) {
+        onHashtagSearch?.(hashtag);
+
+        // Track hashtag search in Google Analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'hashtag_search', {
+            hashtag: hashtag,
+            event_category: 'Search',
+          });
+        }
+      }
+    } else {
+      // Normal IAnfluencer search
+      onSearch?.(value);
+
+      // Track search event in Google Analytics when user types
+      if (value && typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'search', {
+          search_term: value,
+          event_category: 'Search',
+        });
+      }
     }
 
     // Track anonymous interaction on search
@@ -117,7 +141,18 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(searchTerm);
+
+    // Check if the search is for a hashtag
+    const isHashtagSearch = searchTerm.trim().startsWith('#') || searchTerm.trim().startsWith('hashtag:');
+
+    if (isHashtagSearch) {
+      const hashtag = searchTerm.replace(/^(#|hashtag:)\s*/, '').trim();
+      if (hashtag) {
+        onHashtagSearch?.(hashtag);
+      }
+    } else {
+      onSearch?.(searchTerm);
+    }
   };
 
   const handleLandingClick = () => {
@@ -305,8 +340,8 @@ const Header: React.FC<HeaderProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={handleSearchChange}
-                placeholder="Buscar IAnfluencers..."
-                aria-label="Buscar IAnfluencers"
+                placeholder="Buscar IAnfluencers o #hashtags..."
+                aria-label="Buscar IAnfluencers o hashtags"
                 className="w-48 md:w-64 px-4 py-2 pl-10 pr-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

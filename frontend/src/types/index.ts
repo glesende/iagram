@@ -24,6 +24,7 @@ export interface Post {
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
+  hashtags?: string[];
 }
 
 export interface Comment {

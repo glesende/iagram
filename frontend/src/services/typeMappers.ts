@@ -71,6 +71,9 @@ export function mapBackendIAnfluencer(backend: BackendIAnfluencer): IAnfluencer 
 }
 
 export function mapBackendPost(backend: BackendPost): Post {
+  // Extract hashtags from ai_generation_params
+  const hashtags = backend.ai_generation_params?.hashtags || [];
+
   return {
     id: backend.id.toString(),
     iAnfluencerId: backend.i_anfluencer_id.toString(),
@@ -79,7 +82,8 @@ export function mapBackendPost(backend: BackendPost): Post {
     createdAt: backend.published_at || backend.created_at,
     likesCount: backend.likes_count || 0,
     commentsCount: backend.comments_count || 0,
-    isLiked: backend.is_liked ?? false // Now comes from backend
+    isLiked: backend.is_liked ?? false, // Now comes from backend
+    hashtags: Array.isArray(hashtags) ? hashtags : []
   };
 }
 
