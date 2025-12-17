@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EmailVerificationPending from './EmailVerificationPending';
 import ActivityStats from './ActivityStats';
 import ActivityBadge from './ActivityBadge';
@@ -20,6 +20,25 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
   const [generalError, setGeneralError] = useState('');
   const [showVerificationPending, setShowVerificationPending] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+
+  // Password requirements state
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false
+  });
+
+  useEffect(() => {
+    // Check password requirements
+    const password = formData.password;
+    setPasswordRequirements({
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password)
+    });
+  }, [formData.password]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -387,6 +406,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
                 name="password"
                 type="password"
                 required
+                minLength={8}
                 value={formData.password}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
@@ -397,6 +417,45 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password[0]}</p>
               )}
+
+              {/* Password requirements */}
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-medium text-gray-700">Requisitos de contraseña:</p>
+                <div className="space-y-1">
+                  <div className="flex items-center text-xs">
+                    <svg className={`w-4 h-4 mr-2 ${passwordRequirements.minLength ? 'text-green-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={passwordRequirements.minLength ? 'text-gray-700' : 'text-gray-500'}>
+                      Al menos 8 caracteres
+                    </span>
+                  </div>
+                  <div className="flex items-center text-xs">
+                    <svg className={`w-4 h-4 mr-2 ${passwordRequirements.hasUpperCase ? 'text-green-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={passwordRequirements.hasUpperCase ? 'text-gray-700' : 'text-gray-500'}>
+                      Una letra mayúscula
+                    </span>
+                  </div>
+                  <div className="flex items-center text-xs">
+                    <svg className={`w-4 h-4 mr-2 ${passwordRequirements.hasLowerCase ? 'text-green-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={passwordRequirements.hasLowerCase ? 'text-gray-700' : 'text-gray-500'}>
+                      Una letra minúscula
+                    </span>
+                  </div>
+                  <div className="flex items-center text-xs">
+                    <svg className={`w-4 h-4 mr-2 ${passwordRequirements.hasNumber ? 'text-green-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className={passwordRequirements.hasNumber ? 'text-gray-700' : 'text-gray-500'}>
+                      Un número
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Password confirmation field */}
