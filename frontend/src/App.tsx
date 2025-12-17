@@ -36,6 +36,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
+  const [selectedHashtag, setSelectedHashtag] = useState<string>('');
   const [currentView, setCurrentView] = useState<View>('feed');
   const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<any>(null);
@@ -93,6 +94,30 @@ function App() {
     // Track clear filters in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'niche_filters_cleared', {
+        event_category: 'Filter',
+      });
+    }
+  };
+
+  const handleHashtagClick = (hashtag: string) => {
+    setSelectedHashtag(hashtag);
+    setCurrentView('feed');
+
+    // Track hashtag filter in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'hashtag_filter_applied', {
+        hashtag: hashtag,
+        event_category: 'Filter',
+      });
+    }
+  };
+
+  const handleClearHashtagFilter = () => {
+    setSelectedHashtag('');
+
+    // Track clear hashtag filter in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'hashtag_filter_cleared', {
         event_category: 'Filter',
       });
     }
@@ -651,6 +676,7 @@ function App() {
         availableNiches={availableNiches}
         onShowExplore={handleShowExplore}
         onShowFeedPreferences={handleShowFeedPreferences}
+        onHashtagSearch={handleHashtagClick}
       >
         <ExploreIAnfluencers
           authUser={authUser}
@@ -698,6 +724,7 @@ function App() {
         onNotificationClick={handleNotificationClick}
         onShowExplore={handleShowExplore}
         onShowFeedPreferences={handleShowFeedPreferences}
+        onHashtagSearch={handleHashtagClick}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -730,6 +757,7 @@ function App() {
       onNotificationClick={handleNotificationClick}
       onShowExplore={handleShowExplore}
       onShowFeedPreferences={handleShowFeedPreferences}
+      onHashtagSearch={handleHashtagClick}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
@@ -749,6 +777,9 @@ function App() {
         authUser={authUser}
         onPostViewed={incrementViewCount}
         userPreferences={userPreferences}
+        selectedHashtag={selectedHashtag}
+        onHashtagClick={handleHashtagClick}
+        onClearHashtagFilter={handleClearHashtagFilter}
       />
       {/* Register Reminder Modal */}
       <RegisterReminderModal
