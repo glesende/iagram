@@ -539,6 +539,7 @@ function App() {
           onExplore={handleExploreFeed}
           onRegister={handleShowRegister}
           onLogin={handleShowLogin}
+          onProfileClick={handleProfileClick}
           samplePosts={loading ? undefined : feedItems.slice(0, 3)}
         />
       </Layout>

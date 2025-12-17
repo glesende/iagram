@@ -5,10 +5,11 @@ interface LandingPageProps {
   onExplore: () => void;
   onRegister: () => void;
   onLogin: () => void;
+  onProfileClick?: (username: string) => void;
   samplePosts?: FeedItem[];
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogin, samplePosts }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogin, onProfileClick, samplePosts }) => {
   const handleExploreClick = () => {
     // Track landing page CTA click in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -40,6 +41,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
       });
     }
     onLogin();
+  };
+
+  const handleSamplePostClick = (feedItem: FeedItem) => {
+    // Track sample post click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'sample_post_click', {
+        event_category: 'Landing Page',
+        event_label: 'Sample Post Click',
+        post_id: feedItem.post.id,
+        ianfluencer_username: feedItem.iAnfluencer.username,
+      });
+    }
+
+    // Navigate to profile if callback is provided
+    if (onProfileClick) {
+      onProfileClick(feedItem.iAnfluencer.username);
+    }
+  };
+
+  const handleSampleProfileClick = (username: string, event: React.MouseEvent) => {
+    // Prevent triggering the post click when clicking on profile
+    event.stopPropagation();
+
+    // Track sample profile click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'sample_profile_click', {
+        event_category: 'Landing Page',
+        event_label: 'Sample Profile Click',
+        ianfluencer_username: username,
+      });
+    }
+
+    // Navigate to profile if callback is provided
+    if (onProfileClick) {
+      onProfileClick(username);
+    }
   };
 
   return (
@@ -167,10 +204,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {samplePosts.slice(0, 3).map((feedItem) => (
-                <div key={feedItem.post.id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-200">
+                <div
+                  key={feedItem.post.id}
+                  onClick={() => handleSamplePostClick(feedItem)}
+                  className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-200 border border-gray-200 cursor-pointer transform hover:scale-105"
+                >
                   {/* Sample post preview */}
                   <div className="p-4">
-                    <div className="flex items-center mb-3">
+                    <div
+                      className="flex items-center mb-3 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors duration-150"
+                      onClick={(e) => handleSampleProfileClick(feedItem.iAnfluencer.username, e)}
+                    >
                       <img
                         src={feedItem.iAnfluencer.profileImage}
                         alt={feedItem.iAnfluencer.displayName}
