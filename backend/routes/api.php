@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\UserContentPreferenceController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,4 +93,13 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me/content-preferences', [UserContentPreferenceController::class, 'show']);
     Route::post('me/content-preferences', [UserContentPreferenceController::class, 'store']);
+});
+
+// User profile routes - require authentication only
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('me/liked-posts', [UserController::class, 'getLikedPosts']);
+    Route::get('me/comments', [UserController::class, 'getComments']);
+    Route::get('me/stats', [UserController::class, 'getStats']);
+    Route::put('me/profile', [UserController::class, 'updateProfile']);
+    Route::get('me/following-ianfluencers', [UserController::class, 'getFollowing']);
 });
