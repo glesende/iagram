@@ -503,6 +503,66 @@ class ApiService {
     }
     return response.data;
   }
+
+  // User profile methods
+  async getUserLikedPosts(): Promise<{ data: Post[]; meta: any }> {
+    const response = await this.fetchJson<PaginatedApiResponse<BackendPost>>('/me/liked-posts');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch liked posts');
+    }
+    return {
+      data: response.data.data.map(mapBackendPost),
+      meta: response.data.meta
+    };
+  }
+
+  async getUserComments(): Promise<{ data: Comment[]; meta: any }> {
+    const response = await this.fetchJson<PaginatedApiResponse<BackendComment>>('/me/comments');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch user comments');
+    }
+    return {
+      data: response.data.data.map(mapBackendComment),
+      meta: response.data.meta
+    };
+  }
+
+  async getUserStats(): Promise<{
+    liked_posts_count: number;
+    comments_count: number;
+    following_count: number;
+    member_since: string;
+  }> {
+    const response = await this.fetchJson<ApiResponse<{
+      liked_posts_count: number;
+      comments_count: number;
+      following_count: number;
+      member_since: string;
+    }>>('/me/stats');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch user stats');
+    }
+    return response.data;
+  }
+
+  async updateUserProfile(name: string): Promise<any> {
+    const response = await this.fetchJson<ApiResponse<any>>('/me/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update profile');
+    }
+    return response.data;
+  }
+
+  async getUserFollowingIAnfluencers(): Promise<IAnfluencer[]> {
+    const response = await this.fetchJson<ApiResponse<BackendIAnfluencer[]>>('/me/following-ianfluencers');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch following IAnfluencers');
+    }
+    return response.data.map(mapBackendIAnfluencer);
+  }
 }
 
 export const apiService = new ApiService();
