@@ -53,6 +53,7 @@ Route::get('ianfluencers/explore', [IAnfluencerController::class, 'explore']);
 Route::get('ianfluencers/username/{username}', [IAnfluencerController::class, 'showByUsername']);
 Route::get('ianfluencers/{id}/posts', [PostController::class, 'getByIAnfluencer']);
 Route::get('posts/influencer/{username}', [PostController::class, 'getByIAnfluencerUsername']);
+Route::get('posts/trending', [PostController::class, 'trending']);
 Route::get('posts/{id}/comments', [CommentController::class, 'getByPost']);
 Route::get('posts/mentioning/{username}', [PostController::class, 'getMentioning']);
 Route::get('comments/mentioning/{username}', [CommentController::class, 'getMentioning']);
