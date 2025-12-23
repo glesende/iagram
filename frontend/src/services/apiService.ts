@@ -231,6 +231,15 @@ class ApiService {
     return response.data.data.map(mapBackendPost);
   }
 
+  async getTrendingPosts(period?: '24h' | 'week' | 'month'): Promise<Post[]> {
+    const queryParams = period ? `?period=${period}` : '';
+    const response = await this.fetchJson<ApiResponse<BackendPost[]>>(`/posts/trending${queryParams}`);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch trending posts');
+    }
+    return response.data.map(mapBackendPost);
+  }
+
   // Comments API methods
   async getComments(): Promise<Comment[]> {
     const response = await this.fetchJson<PaginatedApiResponse<BackendComment>>('/comments');

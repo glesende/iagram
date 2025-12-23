@@ -29,6 +29,7 @@ interface HeaderProps {
   onNotificationClick?: (notification: Notification) => void;
   onShowExplore?: () => void;
   onShowFeedPreferences?: () => void;
+  onShowTrending?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -53,7 +54,8 @@ const Header: React.FC<HeaderProps> = ({
   onMarkAllNotificationsAsRead,
   onNotificationClick,
   onShowExplore,
-  onShowFeedPreferences
+  onShowFeedPreferences,
+  onShowTrending
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -188,6 +190,17 @@ const Header: React.FC<HeaderProps> = ({
     onShowExplore?.();
   };
 
+  const handleTrendingClick = () => {
+    // Track trending button click
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'header_trending_click', {
+        event_category: 'Navigation',
+        event_label: 'Header Trending Button',
+      });
+    }
+    onShowTrending?.();
+  };
+
   const handleResendVerificationEmail = async () => {
     setIsResendingEmail(true);
 
@@ -272,6 +285,18 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-3">
             <h1 className="text-2xl font-bold text-gray-900">IAgram</h1>
             <div className="flex items-center space-x-2">
+              {onShowTrending && (
+                <button
+                  onClick={handleTrendingClick}
+                  className="hidden sm:flex items-center text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-3 py-1.5 rounded-lg transition-all"
+                  aria-label="Ver tendencias"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  Tendencias
+                </button>
+              )}
               {onShowExplore && (
                 <button
                   onClick={handleExploreClick}
