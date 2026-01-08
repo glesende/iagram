@@ -76,7 +76,7 @@ const EmailVerificationBanner: React.FC<EmailVerificationBannerProps> = ({ authU
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md">
+    <div className="bg-gradient-to-r from-brand-secondary to-brand-primary text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           {/* Icon and message */}
