@@ -196,7 +196,7 @@ const FeedPreferencesModal: React.FC<FeedPreferencesModalProps> = ({ onClose, on
             <button
               onClick={handleSave}
               disabled={saving || loading}
-              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Guardando...' : 'Guardar Preferencias'}
             </button>

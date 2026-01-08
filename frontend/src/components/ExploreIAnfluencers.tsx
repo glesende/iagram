@@ -293,7 +293,7 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
               {selectedNiches.map(niche => (
                 <span
                   key={niche}
-                  className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white flex items-center gap-1"
+                  className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white flex items-center gap-1"
                 >
                   {nicheLabels[niche] || niche}
                   {onNicheToggle && (
@@ -372,7 +372,7 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
             {(selectedNiches.length > 0 || searchTerm) && onClearNicheFilters && (
               <button
                 onClick={onClearNicheFilters}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
+                className="px-6 py-2 bg-gradient-to-r from-brand-primary to-brand-secondary text-white rounded-lg hover:from-brand-primary-dark hover:to-brand-secondary-dark"
               >
                 Limpiar filtros
               </button>
