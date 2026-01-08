@@ -9,6 +9,7 @@ import { isEmailVerified } from '../utils/emailVerification';
 import MentionText from './MentionText';
 import VerifyEmailPrompt from './VerifyEmailPrompt';
 import SaveToCollectionModal from './SaveToCollectionModal';
+import Hashtag from './Hashtag';
 
 interface PostProps {
   feedItem: FeedItem;
@@ -16,9 +17,10 @@ interface PostProps {
   onAnonymousInteraction?: () => void;
   onPostViewed?: () => void;
   authUser?: any;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
-const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction, onPostViewed, authUser }) => {
+const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousInteraction, onPostViewed, authUser, onHashtagClick }) => {
   const { post, iAnfluencer, comments } = feedItem;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -389,6 +391,25 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
     }
   };
 
+  const handleHashtagClick = (hashtag: string) => {
+    // Track hashtag click in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'hashtag_click', {
+        hashtag: hashtag,
+        post_id: post.id,
+        ianfluencer_username: iAnfluencer.username,
+        niche: iAnfluencer.niche,
+        event_category: 'Engagement',
+      });
+    }
+
+    // Trigger the parent component handler
+    onHashtagClick?.(hashtag);
+
+    // Track anonymous interaction
+    onAnonymousInteraction?.();
+  };
+
   return (
     <>
       {/* Email Verification Prompt Modal */}
@@ -560,6 +581,19 @@ const Post: React.FC<PostProps> = ({ feedItem, onProfileClick, onAnonymousIntera
             className="text-sm text-gray-900"
           />
         </div>
+
+        {/* Hashtags */}
+        {post.hashtags && post.hashtags.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {post.hashtags.slice(0, 5).map((hashtag, index) => (
+              <Hashtag
+                key={`${post.id}-${hashtag}-${index}`}
+                tag={hashtag}
+                onClick={handleHashtagClick}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Comments toggle or add comment button */}
         {commentsCount > 0 ? (

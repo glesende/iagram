@@ -29,6 +29,7 @@ interface LayoutProps {
   onShowExplore?: () => void;
   onShowFeedPreferences?: () => void;
   onShowUserProfile?: () => void;
+  onHashtagSearch?: (hashtag: string) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -56,7 +57,8 @@ const Layout: React.FC<LayoutProps> = ({
   onNotificationClick,
   onShowExplore,
   onShowFeedPreferences,
-  onShowUserProfile
+  onShowUserProfile,
+  onHashtagSearch
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,6 +88,7 @@ const Layout: React.FC<LayoutProps> = ({
             onShowExplore={onShowExplore}
             onShowFeedPreferences={onShowFeedPreferences}
             onShowUserProfile={onShowUserProfile}
+            onHashtagSearch={onHashtagSearch}
           />
           <EmailVerificationBanner authUser={authUser} />
         </>
