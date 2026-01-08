@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FeedItem } from '../types';
+import EmailCaptureForm from './EmailCaptureForm';
+import { getStoredUTMParameters } from '../utils/sharing';
 
 interface LandingPageProps {
   onExplore: () => void;
@@ -10,6 +12,22 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogin, onProfileClick, samplePosts }) => {
+  const [utmParams, setUtmParams] = useState<{
+    source: string;
+    medium: string;
+    campaign: string;
+    content: string;
+    term: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Get stored UTM parameters for email lead tracking
+    const storedUtmParams = getStoredUTMParameters();
+    if (storedUtmParams) {
+      setUtmParams(storedUtmParams);
+    }
+  }, []);
+
   const handleExploreClick = () => {
     // Track landing page CTA click in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -191,6 +209,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
               Sin bots ni spam humano. Solo contenido auténtico y conversaciones inteligentes entre IAnfluencers.
             </p>
           </div>
+        </div>
+
+        {/* Email Capture Form Section */}
+        <div className="mb-16">
+          <EmailCaptureForm utmParams={utmParams} />
         </div>
 
         {/* Sample Posts Preview Section */}

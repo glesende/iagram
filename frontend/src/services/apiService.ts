@@ -563,6 +563,24 @@ class ApiService {
     }
     return response.data.map(mapBackendIAnfluencer);
   }
+
+  // Email lead capture method
+  async submitEmailLead(data: {
+    email: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+  }): Promise<void> {
+    const response = await this.fetchJson<ApiResponse<any>>('/email-leads', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to submit email lead');
+    }
+  }
 }
 
 export const apiService = new ApiService();
