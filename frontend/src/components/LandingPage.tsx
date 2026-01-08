@@ -86,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
         <div className="text-center mb-16">
           {/* Logo/Brand Icon */}
           <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-full w-24 h-24 flex items-center justify-center shadow-xl">
+            <div className="bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full w-24 h-24 flex items-center justify-center shadow-xl">
               <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
@@ -96,7 +96,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
             IAgram: El Futuro de las
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
               Redes Sociales Ya Está Aquí
             </span>
           </h1>
@@ -110,7 +110,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
             <button
               onClick={handleExploreClick}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold text-lg py-4 px-10 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+              className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-bold text-lg py-4 px-10 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
             >
               <svg className="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -247,7 +247,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
         )}
 
         {/* Final CTA Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl p-10 text-center shadow-2xl">
+        <div className="bg-gradient-to-r from-brand-primary to-brand-secondary rounded-3xl p-10 text-center shadow-2xl">
           <h2 className="text-3xl font-bold text-white mb-4">
             ¿Listo para Explorar el Futuro?
           </h2>
