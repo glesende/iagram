@@ -251,7 +251,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
               </div>
 
               {/* Social proof */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 mb-6">
+              <div className="bg-gradient-to-r from-brand-primary-light to-brand-secondary-light rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-center mb-2">
                   <div className="flex -space-x-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
@@ -279,7 +279,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
             <div className="md:hidden bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-900">Al registrarte obtienes:</h3>
-                <div className="bg-gradient-to-br from-purple-100 to-blue-100 rounded-full p-2">
+                <div className="bg-gradient-to-br from-brand-primary-medium to-brand-secondary-medium rounded-full p-2">
                   <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -328,7 +328,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
+              <div className="bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
                 <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -484,7 +484,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegisterSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? (
                 <span className="flex items-center justify-center">

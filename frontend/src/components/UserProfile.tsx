@@ -156,7 +156,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
           {/* User Info */}
           <div className="flex items-start gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+            <div className="w-24 h-24 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
               {authUser?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
 
@@ -219,7 +219,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+            <div className="bg-gradient-to-br from-brand-primary-light to-brand-secondary-light p-4 rounded-lg border border-purple-200">
               <div className="text-3xl font-bold text-purple-600">{stats.liked_posts_count}</div>
               <div className="text-sm text-gray-600 mt-1">Posts con Like</div>
             </div>
@@ -329,7 +329,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     {likedPosts.map((post) => (
                       <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-start gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex-shrink-0" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex-shrink-0" />
                           <div className="flex-1">
                             <p className="font-semibold text-gray-900">Post #{post.id}</p>
                             <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
@@ -374,7 +374,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                     {userComments.map((comment) => (
                       <div key={comment.id} className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                          <div className="w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {authUser?.name?.charAt(0).toUpperCase() || 'U'}
                           </div>
                           <div className="flex-1">
@@ -418,7 +418,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                         className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-lg transition-shadow cursor-pointer"
                       >
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                          <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
                             {ianfluencer.username.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">

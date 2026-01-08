@@ -53,7 +53,7 @@ const ActivityStats: React.FC = () => {
   return (
     <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
       <div className="flex items-center justify-center mb-4">
-        <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-full p-2">
+        <div className="bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full p-2">
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>

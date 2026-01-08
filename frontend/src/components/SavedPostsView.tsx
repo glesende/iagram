@@ -159,7 +159,7 @@ const SavedPostsView: React.FC<SavedPostsViewProps> = ({ onBack, onProfileClick 
                 onClick={() => setSelectedCollectionId(null)}
                 className={`flex-shrink-0 px-4 py-2 rounded-full font-medium transition-colors ${
                   selectedCollectionId === null
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                    ? 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                 }`}
               >
@@ -175,7 +175,7 @@ const SavedPostsView: React.FC<SavedPostsViewProps> = ({ onBack, onProfileClick 
                     onClick={() => setSelectedCollectionId(collection.id)}
                     className={`flex-shrink-0 px-4 py-2 rounded-full font-medium transition-colors ${
                       selectedCollectionId === collection.id
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                        ? 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md'
                         : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                     }`}
                   >
@@ -201,7 +201,7 @@ const SavedPostsView: React.FC<SavedPostsViewProps> = ({ onBack, onProfileClick 
             </p>
             <button
               onClick={onBack}
-              className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+              className="mt-6 bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
             >
               Explorar Posts
             </button>

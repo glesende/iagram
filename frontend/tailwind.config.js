@@ -26,10 +26,30 @@ module.exports = {
         /**
          * Brand Colors - Colores principales de la identidad visual
          * Actualmente basados en purple-600 y blue-600 de Tailwind
+         *
+         * Incluye variantes para gradientes:
+         * - light: Fondos sutiles y backgrounds (basado en 50)
+         * - medium: Elementos secundarios (basado en 100)
+         * - DEFAULT: Color principal (basado en 600)
+         * - dark: Estados hover y énfasis (basado en 700)
+         *
+         * Uso en gradientes:
+         * - bg-gradient-to-r from-brand-primary to-brand-secondary
+         * - hover:from-brand-primary-dark hover:to-brand-secondary-dark
          */
         brand: {
-          primary: '#9333ea',    // purple-600 - Color principal del brand
-          secondary: '#2563eb',  // blue-600 - Color secundario para acentos
+          primary: {
+            light: '#faf5ff',      // purple-50 - Para fondos sutiles en gradientes
+            medium: '#f3e8ff',     // purple-100 - Para elementos decorativos
+            DEFAULT: '#9333ea',    // purple-600 - Color principal del brand
+            dark: '#7e22ce',       // purple-700 - Para estados hover
+          },
+          secondary: {
+            light: '#eff6ff',      // blue-50 - Para fondos sutiles en gradientes
+            medium: '#dbeafe',     // blue-100 - Para elementos decorativos
+            DEFAULT: '#2563eb',    // blue-600 - Color secundario para acentos
+            dark: '#1d4ed8',       // blue-700 - Para estados hover
+          },
         },
 
         /**
@@ -68,6 +88,14 @@ module.exports = {
         success: {
           text: '#16a34a',       // green-600 - Texto de éxito
         },
+
+        /**
+         * NOTA IMPORTANTE SOBRE GRADIENTES INVERSOS:
+         * Algunos componentes usan gradientes inversos (from-blue to-purple).
+         * Para esos casos, simplemente invertir el orden:
+         * - Normal: from-brand-primary to-brand-secondary (purple → blue)
+         * - Inverso: from-brand-secondary to-brand-primary (blue → purple)
+         */
       },
     },
   },

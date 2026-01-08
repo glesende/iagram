@@ -167,7 +167,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting || !collectionName.trim()}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200"
+                className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200"
               >
                 {editingCollection ? 'Guardar' : 'Crear'}
               </button>

@@ -125,7 +125,7 @@ const VerifyEmailPrompt: React.FC<VerifyEmailPromptProps> = ({ isOpen, onClose, 
             className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
               isResending || resendSuccess
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transform hover:scale-[1.02]'
+                : 'bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white transform hover:scale-[1.02]'
             }`}
           >
             {isResending ? (

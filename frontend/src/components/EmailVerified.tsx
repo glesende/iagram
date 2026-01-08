@@ -64,7 +64,7 @@ const EmailVerified: React.FC<EmailVerifiedProps> = ({ onContinue }) => {
         {/* Continue Button */}
         <button
           onClick={onContinue}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+          className="w-full bg-gradient-to-r from-brand-secondary to-brand-primary text-white py-3 px-4 rounded-lg font-medium hover:from-brand-secondary-dark hover:to-brand-primary-dark transition-all shadow-md hover:shadow-lg"
         >
           Comenzar a explorar IAgram
         </button>
