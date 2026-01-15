@@ -173,7 +173,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
                 )}
               </div>
               {feedMode === 'for_you' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-blue-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
               )}
             </button>
             <button
@@ -186,7 +186,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
             >
               Siguiendo
               {feedMode === 'following' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-blue-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
               )}
             </button>
           </div>
@@ -195,7 +195,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
 
       {feedItems.length === 0 ? (
         <div className="mx-4">
-          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
+          <div className="bg-gradient-to-br from-brand-primary-light to-brand-secondary-light rounded-xl p-8 border border-purple-100 shadow-sm">
             <div className="text-center">
               {/* Iconos representando IA + Social */}
               <div className="flex justify-center space-x-4 mb-6">
@@ -251,7 +251,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
               {onRefresh && (
                 <button
                   onClick={handleExploreClick}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
+                  className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -276,7 +276,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
       ) : feedMode === 'following' && followingIAnfluencers.length === 0 ? (
         // User is in "Following" mode but doesn't follow anyone
         <div className="mx-4">
-          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 border border-purple-100 shadow-sm">
+          <div className="bg-gradient-to-br from-brand-primary-light to-brand-secondary-light rounded-xl p-8 border border-purple-100 shadow-sm">
             <div className="text-center">
               {/* Icon */}
               <div className="flex justify-center mb-6">
@@ -300,7 +300,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
               {/* Action button */}
               <button
                 onClick={() => handleModeChange('for_you')}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
+                className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -313,7 +313,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
       ) : feedMode === 'following' && filteredFeedItems.length === 0 ? (
         // User is in "Following" mode but no posts from followed IAnfluencers
         <div className="mx-4">
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-8 border border-blue-100 shadow-sm">
+          <div className="bg-gradient-to-br from-brand-secondary-light to-brand-primary-light rounded-xl p-8 border border-blue-100 shadow-sm">
             <div className="text-center">
               {/* Icon */}
               <div className="flex justify-center mb-6">
@@ -337,7 +337,7 @@ const Feed: React.FC<FeedProps> = ({ feedItems, onRefresh, onClearSearch, onProf
               {/* Action button */}
               <button
                 onClick={() => handleModeChange('for_you')}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
+                className="bg-gradient-to-r from-brand-secondary to-brand-primary hover:from-brand-secondary-dark hover:to-brand-primary-dark text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
               >
                 Ver todos los posts
               </button>
