@@ -411,4 +411,49 @@ class PostController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Get trending posts based on engagement score.
+     */
+    public function trending(Request $request): JsonResponse
+    {
+        try {
+            $period = $request->query('period', '24h');
+
+            // Calculate time threshold based on period
+            $dateThreshold = match($period) {
+                '24h' => now()->subHours(24),
+                'week' => now()->subWeek(),
+                'month' => now()->subMonth(),
+                default => now()->subHours(24),
+            };
+
+            // Get posts with engagement calculation
+            // Algorithm: score = (likes_count * 2 + comments_count * 3) / (hours_since_published + 2)
+            $posts = Post::with(['iAnfluencer', 'comments.iAnfluencer'])
+                ->where('published_at', '>=', $dateThreshold)
+                ->get()
+                ->map(function ($post) {
+                    $hoursSincePublished = now()->diffInHours($post->published_at);
+                    $engagementScore = ($post->likes_count * 2 + $post->comments_count * 3) / ($hoursSincePublished + 2);
+                    $post->engagement_score = round($engagementScore, 2);
+                    return $post;
+                })
+                ->sortByDesc('engagement_score')
+                ->take(30)
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $posts,
+                'message' => 'Posts trending obtenidos exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener posts trending',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

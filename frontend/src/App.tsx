@@ -13,6 +13,7 @@ import EmailVerified from './components/EmailVerified';
 import ExploreIAnfluencers from './components/ExploreIAnfluencers';
 import FeedPreferencesModal from './components/FeedPreferencesModal';
 import UserProfile from './components/UserProfile';
+import TrendingView from './components/TrendingView';
 import { getMockFeedItems } from './services/mockData';
 import { apiService } from './services/apiService';
 import { FeedItem, Notification } from './types';
@@ -28,7 +29,7 @@ const ANONYMOUS_INTERACTIONS_KEY = 'iagram_anonymous_interactions';
 const REMINDER_SHOWN_COUNT_KEY = 'reminder_shown_count';
 const INTERACTION_THRESHOLD = 5;
 
-type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password' | 'email-verified' | 'explore' | 'user-profile';
+type View = 'landing' | 'feed' | 'profile' | 'register' | 'login' | 'saved' | 'forgot-password' | 'reset-password' | 'email-verified' | 'explore' | 'user-profile' | 'trending';
 
 function App() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -325,6 +326,17 @@ function App() {
     // Track explore view in Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'navigate_to_explore', {
+        event_category: 'Navigation',
+      });
+    }
+  };
+
+  const handleShowTrending = () => {
+    setCurrentView('trending');
+
+    // Track trending view in Google Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'navigate_to_trending', {
         event_category: 'Navigation',
       });
     }
@@ -704,6 +716,7 @@ function App() {
         onShowFeedPreferences={handleShowFeedPreferences}
         onShowUserProfile={handleShowUserProfile}
         onHashtagSearch={handleHashtagClick}
+        onShowTrending={handleShowTrending}
       >
         <ExploreIAnfluencers
           authUser={authUser}
@@ -713,6 +726,46 @@ function App() {
           onNicheToggle={handleNicheToggle}
           onClearNicheFilters={handleClearNicheFilters}
           onShowRegisterModal={handleShowRegister}
+        />
+        {/* Register Reminder Modal */}
+        <RegisterReminderModal
+          isOpen={showReminderModal}
+          onClose={handleReminderClose}
+          onRegister={handleReminderRegister}
+          anonymousInteractions={anonymousInteractions}
+        />
+      </Layout>
+    );
+  }
+
+  // Show trending view
+  if (currentView === 'trending') {
+    return (
+      <Layout
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
+        onClearSearch={handleClearSearch}
+        onShowLanding={handleShowLanding}
+        onShowRegister={handleShowRegister}
+        onShowLogin={handleShowLogin}
+        authUser={authUser}
+        onLogout={handleLogout}
+        onShowSavedPosts={handleShowSavedPosts}
+        onAnonymousInteraction={trackAnonymousInteraction}
+        viewCount={viewCount}
+        selectedNiches={selectedNiches}
+        onNicheToggle={handleNicheToggle}
+        onClearNicheFilters={handleClearNicheFilters}
+        availableNiches={availableNiches}
+        onShowExplore={handleShowExplore}
+        onShowFeedPreferences={handleShowFeedPreferences}
+        onShowTrending={handleShowTrending}
+      >
+        <TrendingView
+          onProfileClick={handleProfileClick}
+          onAnonymousInteraction={trackAnonymousInteraction}
+          authUser={authUser}
+          selectedNiches={selectedNiches}
         />
         {/* Register Reminder Modal */}
         <RegisterReminderModal
@@ -753,6 +806,7 @@ function App() {
         onShowFeedPreferences={handleShowFeedPreferences}
         onShowUserProfile={handleShowUserProfile}
         onHashtagSearch={handleHashtagClick}
+        onShowTrending={handleShowTrending}
       >
         <div className="flex justify-center items-center min-h-screen">
           <div className="text-lg text-gray-600">Cargando contenido...</div>
@@ -787,6 +841,7 @@ function App() {
       onShowFeedPreferences={handleShowFeedPreferences}
       onShowUserProfile={handleShowUserProfile}
       onHashtagSearch={handleHashtagClick}
+      onShowTrending={handleShowTrending}
     >
       {error && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 mx-4">
