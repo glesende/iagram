@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\UserContentPreferenceController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\EmailLeadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,9 @@ use App\Http\Controllers\Api\UserController;
 
 // Statistics routes (public)
 Route::get('/stats/activity', [StatsController::class, 'activity']);
+
+// Email Lead capture (public - no authentication required)
+Route::post('/email-leads', [EmailLeadController::class, 'store']);
 
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
