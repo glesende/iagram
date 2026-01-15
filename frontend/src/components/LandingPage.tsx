@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FeedItem } from '../types';
 import EmailCaptureForm from './EmailCaptureForm';
+import Testimonials from './Testimonials';
 import { getStoredUTMParameters } from '../utils/sharing';
 
 interface LandingPageProps {
@@ -210,6 +211,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onExplore, onRegister, onLogi
             </p>
           </div>
         </div>
+
+        {/* Testimonials Section */}
+        <Testimonials />
 
         {/* Email Capture Form Section */}
         <div className="mb-16">
