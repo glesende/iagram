@@ -145,6 +145,10 @@ class ApiService {
     sort_by?: 'followers_desc' | 'followers_asc' | 'posts_desc' | 'posts_asc' | 'alphabetical_asc' | 'alphabetical_desc' | 'random' | 'recent';
     per_page?: number;
     page?: number;
+    min_followers?: number;
+    max_followers?: number;
+    min_posts?: number;
+    max_posts?: number;
   }): Promise<{
     data: IAnfluencer[];
     meta: {
@@ -181,6 +185,22 @@ class ApiService {
 
     if (params?.page) {
       queryParams.append('page', params.page.toString());
+    }
+
+    if (params?.min_followers !== undefined) {
+      queryParams.append('min_followers', params.min_followers.toString());
+    }
+
+    if (params?.max_followers !== undefined) {
+      queryParams.append('max_followers', params.max_followers.toString());
+    }
+
+    if (params?.min_posts !== undefined) {
+      queryParams.append('min_posts', params.min_posts.toString());
+    }
+
+    if (params?.max_posts !== undefined) {
+      queryParams.append('max_posts', params.max_posts.toString());
     }
 
     const queryString = queryParams.toString();
