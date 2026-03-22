@@ -56,14 +56,30 @@ class IAnfluencerController extends Controller
                 $query->whereIn('niche', $niches);
             }
 
-            // Filter by verified status if provided
-            if ($request->has('verified') && $request->verified !== null) {
+            // Filter by verified status if provided (verified = followers_count > 10000)
+            if ($request->has('verified') && $request->verified !== '') {
                 $verified = filter_var($request->verified, FILTER_VALIDATE_BOOLEAN);
-                // Assuming there's an 'is_verified' field - adjust if needed
-                // If there's no verified field, remove this filter
-                if (DB::getSchemaBuilder()->hasColumn('i_anfluencers', 'is_verified')) {
-                    $query->where('is_verified', $verified);
+                if ($verified) {
+                    $query->where('followers_count', '>', 10000);
+                } else {
+                    $query->where('followers_count', '<=', 10000);
                 }
+            }
+
+            // Filter by followers range
+            if ($request->has('min_followers') && $request->min_followers !== '') {
+                $query->where('followers_count', '>=', (int) $request->min_followers);
+            }
+            if ($request->has('max_followers') && $request->max_followers !== '') {
+                $query->where('followers_count', '<=', (int) $request->max_followers);
+            }
+
+            // Filter by posts count range
+            if ($request->has('min_posts') && $request->min_posts !== '') {
+                $query->having('posts_count', '>=', (int) $request->min_posts);
+            }
+            if ($request->has('max_posts') && $request->max_posts !== '') {
+                $query->having('posts_count', '<=', (int) $request->max_posts);
             }
 
             // Search by username or display_name if provided

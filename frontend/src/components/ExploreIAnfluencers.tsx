@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { IAnfluencer } from '../types';
 import apiService from '../services/apiService';
 import IAnfluencerCard from './IAnfluencerCard';
+import AdvancedSearchModal, { AdvancedFilters, defaultAdvancedFilters } from './AdvancedSearchModal';
 import logger from '../utils/logger';
 
 interface ExploreIAnfluencersProps {
@@ -23,14 +24,77 @@ const nicheLabels: Record<string, string> = {
   'technology': 'Tecnología'
 };
 
-const sortOptions = [
-  { value: 'followers_desc', label: 'Más seguidores' },
-  { value: 'followers_asc', label: 'Menos seguidores' },
-  { value: 'posts_desc', label: 'Más posts' },
-  { value: 'alphabetical_asc', label: 'A-Z' },
-  { value: 'random', label: 'Aleatorio' },
-  { value: 'recent', label: 'Recientes' }
-];
+/** Convert AdvancedFilters to API parameters */
+function buildAdvancedApiParams(filters: AdvancedFilters): {
+  min_followers?: number;
+  max_followers?: number;
+  min_posts?: number;
+  max_posts?: number;
+  verified?: boolean;
+  sort_by?: 'followers_desc' | 'followers_asc' | 'posts_desc' | 'posts_asc' | 'alphabetical_asc' | 'alphabetical_desc' | 'random' | 'recent';
+} {
+  const params: ReturnType<typeof buildAdvancedApiParams> = {};
+
+  switch (filters.followersRange) {
+    case '1k_10k':
+      params.min_followers = 1000;
+      params.max_followers = 10000;
+      break;
+    case '10k_50k':
+      params.min_followers = 10000;
+      params.max_followers = 50000;
+      break;
+    case '50k_plus':
+      params.min_followers = 50000;
+      break;
+  }
+
+  switch (filters.postsActivity) {
+    case 'new':
+      params.min_posts = 1;
+      params.max_posts = 20;
+      break;
+    case 'active':
+      params.min_posts = 20;
+      params.max_posts = 50;
+      break;
+    case 'very_active':
+      params.min_posts = 50;
+      break;
+  }
+
+  if (filters.verified === 'verified') params.verified = true;
+  if (filters.verified === 'not_verified') params.verified = false;
+
+  params.sort_by = filters.sortBy;
+
+  return params;
+}
+
+function hasActiveAdvancedFilters(filters: AdvancedFilters): boolean {
+  return (
+    filters.followersRange !== 'any' ||
+    filters.postsActivity !== 'any' ||
+    filters.verified !== 'all'
+  );
+}
+
+const followersRangeLabel: Record<string, string> = {
+  '1k_10k': '1K–10K seguidores',
+  '10k_50k': '10K–50K seguidores',
+  '50k_plus': '50K+ seguidores',
+};
+
+const postsActivityLabel: Record<string, string> = {
+  'new': 'Nuevo (1–20 posts)',
+  'active': 'Activo (20–50 posts)',
+  'very_active': 'Muy activo (50+)',
+};
+
+const verifiedLabel: Record<string, string> = {
+  'verified': 'Verificados',
+  'not_verified': 'No verificados',
+};
 
 const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
   authUser,
@@ -44,24 +108,26 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
   const [iAnfluencers, setIAnfluencers] = useState<IAnfluencer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>('followers_desc');
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [showAdvancedModal, setShowAdvancedModal] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
 
   const loadIAnfluencers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const advancedParams = buildAdvancedApiParams(advancedFilters);
+
       const response = await apiService.getExploreIAnfluencers({
         niche: selectedNiches.length > 0 ? selectedNiches : undefined,
         search: searchTerm || undefined,
-        sort_by: sortBy as any,
-        per_page: 50
+        per_page: 50,
+        ...advancedParams,
       });
 
       setIAnfluencers(response.data);
 
-      // Track page view
       if (window.gtag) {
         window.gtag('event', 'view_explore_page', {
           event_category: 'exploration',
@@ -75,14 +141,12 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [selectedNiches, searchTerm, sortBy]);
+  }, [selectedNiches, searchTerm, advancedFilters]);
 
-  // Load IAnfluencers
   useEffect(() => {
     loadIAnfluencers();
   }, [loadIAnfluencers]);
 
-  // Load following status for authenticated users
   useEffect(() => {
     if (authUser) {
       loadFollowingStatus();
@@ -99,41 +163,27 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
   };
 
   const handleFollow = async (id: string) => {
-    // Check if user is authenticated
     if (!authUser) {
-      if (onShowRegisterModal) {
-        onShowRegisterModal();
-      }
+      if (onShowRegisterModal) onShowRegisterModal();
       return;
     }
 
-    // Check if email is verified
     if (!authUser.email_verified_at) {
       alert('Por favor verifica tu email para poder seguir IAnfluencers');
       return;
     }
 
-    // Optimistic update
     setFollowingIds(prev => new Set(Array.from(prev).concat(id)));
-
-    // Update follower count optimistically
     setIAnfluencers(prev =>
-      prev.map(inf =>
-        inf.id === id ? { ...inf, followerCount: inf.followerCount + 1 } : inf
-      )
+      prev.map(inf => inf.id === id ? { ...inf, followerCount: inf.followerCount + 1 } : inf)
     );
 
     try {
       const response = await apiService.followIAnfluencer(id);
-
-      // Update with actual count from backend
       setIAnfluencers(prev =>
-        prev.map(inf =>
-          inf.id === id ? { ...inf, followerCount: response.followers_count } : inf
-        )
+        prev.map(inf => inf.id === id ? { ...inf, followerCount: response.followers_count } : inf)
       );
 
-      // Track follow event
       if (window.gtag) {
         window.gtag('event', 'explore_follow_click', {
           event_category: 'engagement',
@@ -143,19 +193,10 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
       }
     } catch (err: any) {
       logger.error('Error following IAnfluencer:', err);
-      // Revert optimistic update on error
-      setFollowingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
+      setFollowingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
       setIAnfluencers(prev =>
-        prev.map(inf =>
-          inf.id === id ? { ...inf, followerCount: inf.followerCount - 1 } : inf
-        )
+        prev.map(inf => inf.id === id ? { ...inf, followerCount: inf.followerCount - 1 } : inf)
       );
-
-      // Check if error is due to email verification
       if (err.message && err.message.includes('verificar')) {
         alert('Por favor verifica tu email para poder seguir IAnfluencers');
       }
@@ -163,31 +204,17 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
   };
 
   const handleUnfollow = async (id: string) => {
-    // Optimistic update
-    setFollowingIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
-
-    // Update follower count optimistically
+    setFollowingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
     setIAnfluencers(prev =>
-      prev.map(inf =>
-        inf.id === id ? { ...inf, followerCount: inf.followerCount - 1 } : inf
-      )
+      prev.map(inf => inf.id === id ? { ...inf, followerCount: inf.followerCount - 1 } : inf)
     );
 
     try {
       const response = await apiService.unfollowIAnfluencer(id);
-
-      // Update with actual count from backend
       setIAnfluencers(prev =>
-        prev.map(inf =>
-          inf.id === id ? { ...inf, followerCount: response.followers_count } : inf
-        )
+        prev.map(inf => inf.id === id ? { ...inf, followerCount: response.followers_count } : inf)
       );
 
-      // Track unfollow event
       if (window.gtag) {
         window.gtag('event', 'explore_unfollow_click', {
           event_category: 'engagement',
@@ -197,58 +224,58 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
       }
     } catch (err) {
       logger.error('Error unfollowing IAnfluencer:', err);
-      // Revert optimistic update on error
       setFollowingIds(prev => new Set(Array.from(prev).concat(id)));
       setIAnfluencers(prev =>
-        prev.map(inf =>
-          inf.id === id ? { ...inf, followerCount: inf.followerCount + 1 } : inf
-        )
+        prev.map(inf => inf.id === id ? { ...inf, followerCount: inf.followerCount + 1 } : inf)
       );
     }
   };
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-
-    // Track sort change
+  const handleApplyAdvancedFilters = (filters: AdvancedFilters) => {
+    setAdvancedFilters(filters);
     if (window.gtag) {
-      window.gtag('event', 'explore_sort_change', {
+      window.gtag('event', 'advanced_search_apply', {
         event_category: 'exploration',
-        event_label: e.target.value
+        event_label: JSON.stringify(filters)
       });
     }
   };
 
-  // Loading skeleton
-  const renderLoadingSkeleton = () => {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, index) => (
-          <div
-            key={index}
-            className="bg-white border border-gray-300 rounded-lg p-6 animate-pulse"
-          >
-            <div className="flex flex-col items-center mb-4">
-              <div className="w-24 h-24 rounded-full bg-gray-200 mb-3"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded"></div>
-            </div>
-            <div className="flex justify-center mb-3">
-              <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-            </div>
-            <div className="space-y-2 mb-4">
-              <div className="h-3 bg-gray-200 rounded"></div>
-              <div className="h-3 bg-gray-200 rounded w-3/4 mx-auto"></div>
-            </div>
-            <div className="flex justify-center gap-6 mb-4">
-              <div className="h-10 w-16 bg-gray-200 rounded"></div>
-              <div className="h-10 w-16 bg-gray-200 rounded"></div>
-            </div>
-            <div className="h-10 w-full bg-gray-200 rounded-lg"></div>
-          </div>
-        ))}
-      </div>
-    );
+  const handleClearAdvancedFilters = () => {
+    setAdvancedFilters(defaultAdvancedFilters);
   };
+
+  const activeAdvanced = hasActiveAdvancedFilters(advancedFilters);
+  const hasAnyFilter = selectedNiches.length > 0 || searchTerm || activeAdvanced;
+
+  // Loading skeleton
+  const renderLoadingSkeleton = () => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {[...Array(8)].map((_, index) => (
+        <div
+          key={index}
+          className="bg-white border border-gray-300 rounded-lg p-6 animate-pulse"
+        >
+          <div className="flex flex-col items-center mb-4">
+            <div className="w-24 h-24 rounded-full bg-gray-200 mb-3"></div>
+            <div className="h-4 w-32 bg-gray-200 rounded"></div>
+          </div>
+          <div className="flex justify-center mb-3">
+            <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+          </div>
+          <div className="space-y-2 mb-4">
+            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded w-3/4 mx-auto"></div>
+          </div>
+          <div className="flex justify-center gap-6 mb-4">
+            <div className="h-10 w-16 bg-gray-200 rounded"></div>
+            <div className="h-10 w-16 bg-gray-200 rounded"></div>
+          </div>
+          <div className="h-10 w-full bg-gray-200 rounded-lg"></div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -267,29 +294,36 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
       {/* Filters and Sort */}
       <div className="max-w-7xl mx-auto px-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          {/* Sort Dropdown */}
+          {/* Left: Advanced Search button */}
           <div className="flex items-center gap-3">
-            <label htmlFor="sort" className="text-sm font-medium text-gray-700">
-              Ordenar por:
-            </label>
-            <select
-              id="sort"
-              value={sortBy}
-              onChange={handleSortChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            <button
+              type="button"
+              onClick={() => setShowAdvancedModal(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                activeAdvanced
+                  ? 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white border-transparent'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-brand-primary hover:text-brand-primary'
+              }`}
             >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"
+                />
+              </svg>
+              Búsqueda avanzada
+              {activeAdvanced && (
+                <span className="ml-1 bg-white bg-opacity-30 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                  ✓
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Active Filters Display */}
-          {(selectedNiches.length > 0 || searchTerm) && (
+          {hasAnyFilter && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-gray-600">Filtros activos:</span>
+
               {selectedNiches.map(niche => (
                 <span
                   key={niche}
@@ -312,14 +346,37 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
                   )}
                 </span>
               ))}
+
               {searchTerm && (
                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-700">
                   Búsqueda: "{searchTerm}"
                 </span>
               )}
-              {onClearNicheFilters && (
+
+              {advancedFilters.followersRange !== 'any' && (
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                  {followersRangeLabel[advancedFilters.followersRange]}
+                </span>
+              )}
+
+              {advancedFilters.postsActivity !== 'any' && (
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                  {postsActivityLabel[advancedFilters.postsActivity]}
+                </span>
+              )}
+
+              {advancedFilters.verified !== 'all' && (
+                <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                  {verifiedLabel[advancedFilters.verified]}
+                </span>
+              )}
+
+              {(selectedNiches.length > 0 || activeAdvanced) && (
                 <button
-                  onClick={onClearNicheFilters}
+                  onClick={() => {
+                    if (onClearNicheFilters) onClearNicheFilters();
+                    handleClearAdvancedFilters();
+                  }}
                   className="text-xs text-purple-600 hover:text-purple-700 font-medium"
                 >
                   Limpiar filtros
@@ -369,9 +426,12 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
             <p className="text-gray-600 mb-4">
               Intenta ajustar tus filtros de búsqueda
             </p>
-            {(selectedNiches.length > 0 || searchTerm) && onClearNicheFilters && (
+            {hasAnyFilter && (
               <button
-                onClick={onClearNicheFilters}
+                onClick={() => {
+                  if (onClearNicheFilters) onClearNicheFilters();
+                  handleClearAdvancedFilters();
+                }}
                 className="px-6 py-2 bg-gradient-to-r from-brand-primary to-brand-secondary text-white rounded-lg hover:from-brand-primary-dark hover:to-brand-secondary-dark"
               >
                 Limpiar filtros
@@ -396,6 +456,14 @@ const ExploreIAnfluencers: React.FC<ExploreIAnfluencersProps> = ({
           </div>
         )}
       </div>
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearchModal
+        isOpen={showAdvancedModal}
+        filters={advancedFilters}
+        onApply={handleApplyAdvancedFilters}
+        onClose={() => setShowAdvancedModal(false)}
+      />
     </div>
   );
 };
